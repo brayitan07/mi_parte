@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load dict_extras %}
+{% block title %}Asistencia{% endblock %}
+{% block active_asistencia %}active{% endblock %}
+{% block search_placeholder %}Buscar estudiante...{% endblock %}
+
+{% block extra_css %}
+<style>
+    .asistencia-btn{border:none;width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:bold;}
+    .btn-presente{background:#d1fae5;color:#065f46;}
+    .btn-ausente{background:#fee2e2;color:#991b1b;}
+    .btn-tardanza{background:#fef3c7;color:#92400e;}
+    .btn-presente.selected{background:#10b981;color:white;}
+    .btn-ausente.selected{background:#ef4444;color:white;}
+    .btn-tardanza.selected{background:#f59e0b;color:white;}
+    .header-card{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .leyenda{display:flex;gap:15px;align-items:center;font-size:13px;}
+    .dot{width:12px;height:12px;border-radius:50%;display:inline-block;}
+    .good{color:#10b981;font-weight:bold;}
+    .filtro-form select{padding:10px;border:1px solid #e5e7eb;border-radius:10px;outline:none;font-family:inherit;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats">
+    <div class="stat-card">
+        <div class="icon blue"><i class="fa-solid fa-users"></i></div>
+        <h3>{{ total }}</h3><p>Estudiantes</p>
+    </div>
+    <div class="stat-card">
+        <div class="icon green"><i class="fa-solid fa-user-check"></i></div>
+        <h3>{{ presentes }}</h3><p>Presentes</p>
+    </div>
+    <div class="stat-card">
+        <div class="icon purple"><i class="fa-solid fa-user-clock"></i></div>
+        <h3>{{ tardanzas }}</h3><p>Tardanzas</p>
+    </div>
+    <div class="stat-card">
+        <div class="icon orange"><i class="fa-solid fa-user-xmark"></i></div>
+        <h3>{{ ausentes }}</h3><p>Ausentes</p>
+    </div>
+</div>
+
+<!-- FILTRO CURSO -->
+<div class="section-card">
+    <h4>Seleccionar Grado</h4>
+    <form method="GET" style="display:flex;gap:15px;">
+        <select name="curso" class="filtro-form" onchange="this.form.submit()">
+            <option value="">-- Seleccionar Grado --</option>
+            {% for curso in cursos %}
+                <option value="{{ curso.id }}" {% if curso_sel and curso.id == curso_sel.id %}selected{% endif %}>{{ curso.nombre }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+{% if curso_sel %}
+<div class="section-card">
+    <div class="header-card">
+        <div>
+            <h4 style="margin:0;">{{ curso_sel.nombre }} - Asistencia</h4>
+            <small style="color:#6b7280;">Fecha: {{ fecha_hoy }}</small>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+            <div class="leyenda">
+                <span><span class="dot" style="background:#10b981"></span>Presente</span>
+                <span><span class="dot" style="background:#f59e0b"></span>Tardanza</span>
+                <span><span class="dot" style="background:#ef4444"></span>Ausente</span>
+            </div>
+            <button type="submit" form="formAsistencia" class="btn-save">Guardar</button>
+        </div>
+    </div>
+    <form id="formAsistencia" method="POST" action="{% url 'asistencia_docente' %}">
+        {% csrf_token %}
+        <input type="hidden" name="curso_id" value="{{ curso_sel.id }}">
+        <input type="hidden" name="fecha" value="{{ fecha_hoy }}">
+        <table>
+            <thead>
+                <tr><th>#</th><th>Estudiante</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+                {% for estudiante in estudiantes %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ estudiante.nombre }}</td>
+                    <td>
+                        <select name="estado_{{ estudiante.id }}" style="padding:6px;border:1px solid #e5e7eb;border-radius:8px;outline:none;">
+                            <option value="presente" {% if asistencias_map|get_item:estudiante.id == 'presente' %}selected{% endif %}>✅ Presente</option>
+                            <option value="tardanza" {% if asistencias_map|get_item:estudiante.id == 'tardanza' %}selected{% endif %}>⏰ Tardanza</option>
+                            <option value="ausente" {% if asistencias_map|get_item:estudiante.id == 'ausente' %}selected{% endif %}>❌ Ausente</option>
+                        </select>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" style="text-align:center;color:#6b7280;">No hay estudiantes en este curso.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</div>
+{% else %}
+<div class="section-card" style="text-align:center;color:#6b7280;padding:40px;">
+    <i class="fa-solid fa-arrow-up" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
+    Selecciona un grado para registrar la asistencia.
+</div>
+{% endif %}
+{% endblock %}
