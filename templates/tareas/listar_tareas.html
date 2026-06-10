@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Listar Tareas{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Listar Tareas</h1>
+    <ul>
+        <li><a href="{% url 'listar_tareas' %}">tareas</a></li>
+        <li><a href="{% url 'crear_tarea' %}">Crear Tarea</a></li>
+    </ul>
+    <ul>
+        {% for tarea in tareas %}
+        <li>
+            <h3>titulo: {{ tarea.titulo }}</h3>
+        </li>
+        <li>
+            <p>descripcion: {{ tarea.descripcion }}</p>
+        </li>
+        <li>
+            <p>fecha de entrega: {{ tarea.fecha_entrega }}</p>
+        </li>
+
+        <li><a href="{% url 'editar_tarea' tarea.id %}">Editar</a></li>
+        <li><a href="{% url 'eliminar_tarea' tarea.id %}">Eliminar</a></li>
+
+        {% endfor %}
+
+    </ul>
+</div>
+{% endblock %}

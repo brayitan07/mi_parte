@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Tarea{% endblock %}
+
+{% block content %}
+<h1>Crear Tarea</h1>
+
+<div class="container mt-5">
+    <form class="form-control" action="{% url 'crear_tarea' %}" method="post">
+        {% csrf_token %}
+        {{ formTarea.as_p }}
+        {{ formRecursos.as_p }}
+        <button type="submit" class="btn btn-primary">Agregar Tarea</button>
+    </form>
+</div>
+
+<form action="">
+    <label for="id_nombre">Nombre:</label>
+</form>
+
+{% endblock %}
