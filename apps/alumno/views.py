@@ -37,7 +37,7 @@ def dashboard_alumno(request):
     if not estudiante:
         return render(request, 'alumno/dashboard_alumno.html', {})
     stats = get_stats(estudiante)
-    tareas = Tarea.objects.filter(curso=estudiante.curso)
+    tareas = Tarea.objects.filter(asignacion__curso=estudiante.curso)
     mensajes = Mensaje.objects.filter(estudiante=estudiante).order_by('-fecha')
     sin_leer = mensajes.filter(leido=False, enviado_por='docente').count()
     context = {
@@ -58,22 +58,30 @@ def materias_alumno(request):
 
 def tareas_alumno(request):
     estudiante = get_estudiante()
-    if not estudiante:
-        return render(request, 'alumno/tareas_alumno.html', {})
 
-    tareas_cal     = Tarea.objects.filter(curso=estudiante.curso).order_by('fecha_limite')
-    tareas_detalle = Tareas.objects.all()
+    if not estudiante:
+        return render(request, 'alumno/tareas_alumno.html', {
+            'tareas': [],
+            'total_tareas': 0,
+            'pendientes': 0,
+            'entregadas': 0,
+            'vencidas': 0,
+        })
+
+    tareas_cal = Tareas.objects.all().order_by('fecha_entrega')
 
     context = {
-        'estudiante':    estudiante,
-        'tareas':        tareas_cal,
-        'tareas_detalle': tareas_detalle,
-        'total_tareas':  tareas_cal.count(),
-        'pendientes':    tareas_cal.filter(estado='pendiente').count(),
-        'entregadas':    tareas_cal.filter(estado='entregada').count(),
-        'vencidas':      tareas_cal.filter(estado='vencida').count(),
+        'estudiante': estudiante,
+        'tareas': tareas_cal,
+        'total_tareas': tareas_cal.count(),
+
+        # no existe estado en tu modelo actual
+        'pendientes': 0,
+        'entregadas': 0,
+        'vencidas': 0,
     }
-    return render(request, 'alumno/tareas_alumno.html', context)
+
+    return render(request, 'tareas/alumno/detalle_tareas.html', context)
 
 def detalle_tarea(request, tarea_id):
     tarea = get_object_or_404(Tareas, id=tarea_id)
