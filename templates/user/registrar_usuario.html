@@ -1,12 +1,70 @@
-{% extends "base.html" %}
+{% load static %}
 
-{% block title %}Registrar Usuario{% endblock %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registro - Educatec</title>
 
-{% block content %}
-    <h2>Registrar Usuario</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ registroForm.as_p }}
-        <button type="submit">Registrar</button>
-    </form>
-{% endblock %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  </head>
+
+  <body class="bg-light">
+    <div class="container mt-5">
+      <div class="row justify-content-center">
+        <div class="col-md-6">
+          <div class="card shadow">
+            <div class="card-header text-center">
+              <h3>Crear Cuenta</h3>
+            </div>
+
+            <div class="card-body">
+              {% if registroForm.errors %}
+                <div class="alert alert-danger">{{ registroForm.errors }}</div>
+              {% endif %}
+
+              <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                  <label class="form-label">Usuario</label>
+
+                  <input type="text" name="username" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Nombre Completo</label>
+
+                  <input type="text" name="nombre" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Correo Electrónico</label>
+
+                  <input type="email" name="email" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Contraseña</label>
+
+                  <input type="password" name="password" class="form-control" required />
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Registrarse</button>
+              </form>
+
+              <hr />
+
+              <div class="text-center">
+                <p>¿Ya tienes cuenta?</p>
+
+                <a href="{% url 'iniciar_sesion' %}" class="btn btn-outline-secondary">Iniciar Sesión</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

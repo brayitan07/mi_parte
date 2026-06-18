@@ -1,0 +1,207 @@
+{% extends 'docente/base.html' %}
+{% load dict_extras %}
+{% block title %}Asistencia{% endblock %}
+{% block active_asistencia %}active{% endblock %}
+{% block search_placeholder %}Buscar estudiante...{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-card{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .leyenda{display:flex;gap:15px;align-items:center;font-size:13px;}
+    .dot{width:12px;height:12px;border-radius:50%;display:inline-block;}
+
+    .filtro-form{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+    .select-group{display:flex;flex-direction:column;gap:6px;}
+    .select-group label{font-size:12px;font-weight:600;color:#64748b;letter-spacing:.04em;text-transform:uppercase;}
+    .select-wrap{position:relative;}
+    .select-wrap i{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:13px;color:#94a3b8;pointer-events:none;}
+    .select-wrap select{
+        appearance:none;-webkit-appearance:none;
+        padding:10px 36px 10px 14px;
+        border:1.5px solid #e5e7eb;border-radius:12px;
+        background:#f8fafc;font-family:'Segoe UI',sans-serif;
+        font-size:14px;color:#081b3a;cursor:pointer;outline:none;
+        min-width:160px;
+        transition:border-color .2s,background .2s,box-shadow .2s;
+    }
+    .select-wrap select:hover{border-color:#94a3b8;background:#fff;}
+    .select-wrap select:focus{border-color:#006eff;background:#fff;box-shadow:0 0 0 3px rgba(0,110,255,.1);}
+
+    .btn-save-row{
+        padding:7px 16px;border:none;border-radius:8px;
+        background:#006eff;color:#fff;
+        cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;
+        display:inline-flex;align-items:center;gap:6px;
+        transition:background .15s,transform .1s,box-shadow .15s;
+        box-shadow:0 2px 6px rgba(0,110,255,.25);
+    }
+    .btn-save-row:hover{background:#0055cc;transform:translateY(-1px);}
+    .btn-save-row.saving{opacity:.7;pointer-events:none;}
+    .btn-save-row.saved{background:#10b981;box-shadow:0 2px 6px rgba(16,185,129,.3);}
+    .btn-save-row.error{background:#ef4444;box-shadow:0 2px 6px rgba(239,68,68,.3);}
+
+    .btn-historial{
+        padding:9px 18px;border:1.5px solid #006eff;border-radius:10px;
+        background:transparent;color:#006eff;font-size:14px;font-weight:600;
+        font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+        text-decoration:none;
+        transition:background .15s,color .15s;
+    }
+    .btn-historial:hover{background:#006eff;color:#fff;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats">
+    <div class="stat-card">
+        <div class="icon blue"><i class="fa-solid fa-users"></i></div>
+        <h3>{{ total }}</h3><p>Estudiantes</p>
+    </div>
+    <div class="stat-card">
+        <div class="icon green"><i class="fa-solid fa-user-check"></i></div>
+        <h3>{{ presentes }}</h3><p>Presentes</p>
+    </div>
+    <div class="stat-card">
+        <div class="icon purple"><i class="fa-solid fa-user-clock"></i></div>
+        <h3>{{ tardanzas }}</h3><p>Tardanzas</p>
+    </div>
+    <div class="stat-card">
+        <div class="icon orange"><i class="fa-solid fa-user-xmark"></i></div>
+        <h3>{{ ausentes }}</h3><p>Ausentes</p>
+    </div>
+</div>
+
+<!-- FILTRO -->
+<div class="section-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h4 style="margin:0;">Seleccionar Grado</h4>
+        <a href="{% url 'historial_asistencia' %}" class="btn-historial">
+            <i class="fa-solid fa-clock-rotate-left"></i> Ver Historial
+        </a>
+    </div>
+    <form method="GET" class="filtro-form">
+        <div class="select-group">
+            <label for="selectCurso">Grado</label>
+            <div class="select-wrap">
+                <select name="curso" id="selectCurso" onchange="this.form.submit()">
+                    <option value="">Seleccionar grado</option>
+                    {% for curso in cursos %}
+                        <option value="{{ curso.id }}"
+                            {% if curso_sel and curso.id == curso_sel.id %}selected{% endif %}>
+                            {{ curso.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if curso_sel %}
+<div class="section-card">
+    <div class="header-card">
+        <div>
+            <h4 style="margin:0;">{{ curso_sel.nombre }} — Asistencia</h4>
+            <small style="color:#6b7280;">Fecha: {{ fecha_hoy }}</small>
+        </div>
+        <div class="leyenda">
+            <span><span class="dot" style="background:#10b981"></span> Presente</span>
+            <span><span class="dot" style="background:#f59e0b"></span> Tardanza</span>
+            <span><span class="dot" style="background:#ef4444"></span> Ausente</span>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Estudiante</th>
+                <th>Estado</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for estudiante in estudiantes %}
+            <tr data-estudiante="{{ estudiante.id }}"
+                data-curso="{{ curso_sel.id }}"
+                data-fecha="{{ fecha_hoy|date:'Y-m-d' }}">
+                <td>{{ forloop.counter }}</td>
+                <td>{{ estudiante.nombre }}</td>
+                <td>
+                    <div class="select-wrap">
+                        <select class="sel-estado">
+                            <option value="presente" {% if asistencias_map|get_item:estudiante.id == 'presente' %}selected{% endif %}>✅ Presente</option>
+                            <option value="tardanza" {% if asistencias_map|get_item:estudiante.id == 'tardanza' %}selected{% endif %}>⏰ Tardanza</option>
+                            <option value="ausente"  {% if asistencias_map|get_item:estudiante.id == 'ausente'  %}selected{% endif %}>❌ Ausente</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                </td>
+                <td>
+                    <button class="btn-save-row btn-guardar-asistencia">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar
+                    </button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="text-align:center;color:#6b7280;">No hay estudiantes en este curso.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+const CSRF = '{{ csrf_token }}';
+const URL_ASISTENCIA = '{% url "guardar_asistencia" %}';
+
+document.querySelectorAll('tr[data-estudiante]').forEach(fila => {
+    fila.querySelector('.btn-guardar-asistencia').addEventListener('click', async function () {
+        const btn    = this;
+        const estado = fila.querySelector('.sel-estado').value;
+
+        btn.classList.add('saving');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+        const body = new URLSearchParams({
+            csrfmiddlewaretoken: CSRF,
+            estudiante_id: fila.dataset.estudiante,
+            fecha:         fila.dataset.fecha,
+            estado:        estado,
+        });
+
+        try {
+            const res = await fetch(URL_ASISTENCIA, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': CSRF },
+                body: body,
+            });
+            if (res.ok) {
+                btn.classList.remove('saving');
+                btn.classList.add('saved');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Guardado';
+                setTimeout(() => {
+                    btn.classList.remove('saved');
+                    btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+                }, 2500);
+            } else { throw new Error(); }
+        } catch {
+            btn.classList.remove('saving');
+            btn.classList.add('error');
+            btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Error';
+            setTimeout(() => {
+                btn.classList.remove('error');
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+            }, 3000);
+        }
+    });
+});
+</script>
+
+{% else %}
+<div class="section-card" style="text-align:center;color:#6b7280;padding:40px;">
+    <i class="fa-solid fa-arrow-up" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
+    Selecciona un grado para registrar la asistencia.
+</div>
+{% endif %}
+{% endblock %}

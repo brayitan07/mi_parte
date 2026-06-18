@@ -1,13 +1,63 @@
-{% extends 'base.html' %}
+{% extends 'docente/base.html' %}
+{% block title %}Eliminar Tarea{% endblock %}
+{% block active_tareas %}active{% endblock %}
+{% block search_placeholder %}Buscar tarea...{% endblock %}
 
-{% block title %}Tareas{% endblock %}
+{% block extra_css %}
+<style>
+    .confirm-card {
+        background: white; border-radius: 16px; padding: 40px;
+        max-width: 520px; margin: 40px auto; text-align: center;
+        box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+    }
+    .confirm-icon {
+        width: 64px; height: 64px; border-radius: 50%;
+        background: #fee2e2; color: #ef4444;
+        font-size: 28px; display: flex; align-items: center;
+        justify-content: center; margin: 0 auto 20px;
+    }
+    .confirm-card h4 { margin: 0 0 8px; color: #081b3a; font-size: 20px; }
+    .confirm-card p { color: #6b7280; font-size: 14px; margin: 0 0 28px; }
+    .confirm-card strong { color: #081b3a; }
+
+    .acciones { display: flex; gap: 12px; justify-content: center; }
+
+    .btn-eliminar {
+        padding: 10px 24px; border: none; border-radius: 10px;
+        background: #ef4444; color: #fff; font-size: 14px; font-weight: 600;
+        font-family: inherit; cursor: pointer;
+        box-shadow: 0 2px 6px rgba(239,68,68,.3);
+        transition: background .15s, transform .1s;
+    }
+    .btn-eliminar:hover { background: #dc2626; transform: translateY(-1px); }
+
+    .btn-cancelar {
+        padding: 10px 24px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+        background: transparent; color: #6b7280; font-size: 14px; font-weight: 600;
+        font-family: inherit; cursor: pointer; text-decoration: none;
+        transition: background .15s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-cancelar:hover { background: #f3f4f6; }
+</style>
+{% endblock %}
 
 {% block content %}
-<h1>Eliminar Tarea</h1>
-<p>¿Estás seguro de que quieres eliminar la tarea "{{ tarea.titulo }}"?</p>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Eliminar</button>
-    <a href="{% url 'listar_tareas' %}">Cancelar</a>
-</form>
+<div class="confirm-card">
+    <div class="confirm-icon">
+        <i class="fa-solid fa-trash"></i>
+    </div>
+    <h4>¿Eliminar tarea?</h4>
+    <p>Estás a punto de eliminar <strong>"{{ tarea.titulo }}"</strong>.<br>Esta acción no se puede deshacer.</p>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="acciones">
+            <a href="{% url 'listar_tareas' %}" class="btn-cancelar">
+                <i class="fa-solid fa-arrow-left"></i> Cancelar
+            </a>
+            <button type="submit" class="btn-eliminar">
+                <i class="fa-solid fa-trash"></i> Sí, eliminar
+            </button>
+        </div>
+    </form>
+</div>
 {% endblock %}

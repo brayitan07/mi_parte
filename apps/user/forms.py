@@ -8,7 +8,7 @@ class UserForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'nombre', 'email', 'password']
+        fields = ['username', 'email', 'password']
 
 # forms.py
 
@@ -20,5 +20,5 @@ class iniciarSesionForm(forms.Form):
 
     password = forms.CharField(
         label='Contraseña',
-        widget=forms.PasswordInput
+        widget=forms.PasswordInput()
     )

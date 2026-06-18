@@ -1,5 +1,6 @@
-from django.shortcuts import render, redirect
-from apps.calificaciones.models import Estudiante, Calificacion, Asistencia, Mensaje, Tarea, Docente
+from django.shortcuts import render, redirect, get_object_or_404
+from apps.tareas.models import Tareas, RespuestaCorrecta, RespuestaEstudiante
+from apps.docente.models import Estudiante, Calificacion, Asistencia, Mensaje, Tarea, Docente
 from django.utils import timezone
 
 ESTUDIANTE_ID = 1
@@ -59,16 +60,53 @@ def tareas_alumno(request):
     estudiante = get_estudiante()
     if not estudiante:
         return render(request, 'alumno/tareas_alumno.html', {})
-    tareas = Tarea.objects.filter(curso=estudiante.curso).order_by('fecha_limite')
+
+    tareas_cal     = Tarea.objects.filter(curso=estudiante.curso).order_by('fecha_limite')
+    tareas_detalle = Tareas.objects.all()
+
     context = {
-        'estudiante': estudiante,
-        'tareas': tareas,
-        'total_tareas': tareas.count(),
-        'pendientes': tareas.filter(estado='pendiente').count(),
-        'entregadas': tareas.filter(estado='entregada').count(),
-        'vencidas': tareas.filter(estado='vencida').count(),
+        'estudiante':    estudiante,
+        'tareas':        tareas_cal,
+        'tareas_detalle': tareas_detalle,
+        'total_tareas':  tareas_cal.count(),
+        'pendientes':    tareas_cal.filter(estado='pendiente').count(),
+        'entregadas':    tareas_cal.filter(estado='entregada').count(),
+        'vencidas':      tareas_cal.filter(estado='vencida').count(),
     }
     return render(request, 'alumno/tareas_alumno.html', context)
+
+def detalle_tarea(request, tarea_id):
+    tarea = get_object_or_404(Tareas, id=tarea_id)
+
+    resultados      = {}
+    puntaje_total   = 0
+    puntaje_obtenido = 0
+
+    if request.method == 'POST':
+        for pregunta in tarea.preguntas.all():
+            respuesta_usuario = request.POST.get(f'pregunta_{pregunta.id}')
+            if respuesta_usuario:
+                correcta = RespuestaCorrecta.objects.get(pregunta=pregunta)
+                es_correcta = (
+                    respuesta_usuario.strip().lower()
+                    == correcta.respuesta.strip().lower()
+                )
+                RespuestaEstudiante.objects.create(
+                    pregunta=pregunta,
+                    respuesta=respuesta_usuario,
+                    es_correcta=es_correcta,
+                )
+                resultados[pregunta.id] = es_correcta
+                puntaje_total += pregunta.puntaje
+                if es_correcta:
+                    puntaje_obtenido += pregunta.puntaje
+
+    return render(request, 'tareas/alumno/detalle_tareas.html', {
+        'tarea':            tarea,
+        'resultados':       resultados,
+        'puntaje_total':    puntaje_total,
+        'puntaje_obtenido': puntaje_obtenido,
+    })
 
 def calificaciones_alumno(request):
     estudiante = get_estudiante()
@@ -109,38 +147,22 @@ def mensajes_alumno(request):
     enviados = mensajes.filter(enviado_por='estudiante').count()
     return render(request, 'alumno/mensajes_alumno.html', {
         'estudiante': estudiante,
-        'mensajes': mensajes,
-        'sin_leer': sin_leer,
-        'enviados': enviados,
+        'mensajes':   mensajes,
+        'sin_leer':   sin_leer,
+        'enviados':   enviados,
     })
 
 def logros_alumno(request):
     estudiante = get_estudiante()
-
     if not estudiante:
-        return render(
-            request,
-            'alumno/logros_alumno.html',
-            {
-                'promedio': 0,
-                'porcentaje_asistencia': 0,
-                'total_logros': 0,
-                'logros_por_desbloquear': 5,
-            }
-        )
-
+        return render(request, 'alumno/logros_alumno.html', {
+            'promedio': 0,
+            'porcentaje_asistencia': 0,
+            'total_logros': 0,
+            'logros_por_desbloquear': 5,
+        })
     stats = get_stats(estudiante)
-
-    context = {
-        'estudiante': estudiante,
-        **stats,
-    }
-
-    return render(
-        request,
-        'alumno/logros_alumno.html',
-        context
-    )
+    return render(request, 'alumno/logros_alumno.html', {'estudiante': estudiante, **stats})
 
 def configuracion_alumno(request):
     estudiante = get_estudiante()

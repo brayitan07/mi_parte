@@ -1,0 +1,273 @@
+{% extends 'alumno/base.html' %}
+{% load embed_video_tags %}
+{% block title %}Detalle Tarea{% endblock %}
+{% block active_tareas %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex; align-items: center; gap: 14px;
+        margin-bottom: 24px;
+    }
+    .btn-volver {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border: 1.5px solid #e5e7eb;
+        border-radius: 10px; background: #fff; color: #475569;
+        font-size: 13px; font-weight: 600; font-family: inherit;
+        cursor: pointer; text-decoration: none;
+        transition: background .15s, border-color .15s;
+    }
+    .btn-volver:hover { background: #f1f5f9; border-color: #94a3b8; color: #081b3a; }
+
+    .detalle-card {
+        background: white; border-radius: 16px; padding: 28px;
+        margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,.05);
+    }
+    .detalle-card h4 { margin: 0 0 8px; color: #081b3a; font-size: 18px; font-weight: 700; }
+    .detalle-card p  { margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6; }
+
+    .tarea-meta {
+        display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px;
+    }
+    .tarea-meta span {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; color: #64748b;
+        background: #f8fafc; padding: 4px 12px;
+        border-radius: 20px; border: 1px solid #e5e7eb;
+    }
+
+    .pregunta-card {
+        background: #f8fafc; border: 1.5px solid #e5e7eb;
+        border-radius: 12px; padding: 20px; margin-bottom: 16px;
+    }
+    .pregunta-card h5 {
+        margin: 0 0 14px; font-size: 15px;
+        color: #081b3a; font-weight: 600;
+    }
+    .pregunta-num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 26px; height: 26px; border-radius: 50%;
+        background: #006eff; color: #fff;
+        font-size: 12px; font-weight: 700; margin-right: 8px; flex-shrink: 0;
+    }
+    .pregunta-header { display: flex; align-items: flex-start; gap: 4px; }
+
+    .form-group input[type="text"], .form-group textarea {
+        width: 100%; padding: 10px 14px;
+        border: 1.5px solid #e5e7eb; border-radius: 10px;
+        background: #fff; font-family: inherit; font-size: 14px;
+        color: #081b3a; outline: none; box-sizing: border-box;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+        border-color: #006eff;
+        box-shadow: 0 0 0 3px rgba(0,110,255,.1);
+    }
+
+    .opciones-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+    .opciones-list li {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px; border: 1.5px solid #e5e7eb;
+        border-radius: 10px; background: #fff; cursor: pointer;
+        transition: border-color .15s, background .15s;
+        font-size: 14px; color: #081b3a;
+    }
+    .opciones-list li:has(input:checked) { border-color: #006eff; background: #eff6ff; }
+    .opciones-list input[type="radio"] { accent-color: #006eff; }
+
+    .badge-resultado {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 12px; border-radius: 20px;
+        font-size: 12px; font-weight: 600; margin-top: 10px;
+    }
+    .badge-correcto   { background: #d1fae5; color: #065f46; }
+    .badge-incorrecto { background: #fee2e2; color: #991b1b; }
+
+    .puntaje-card {
+        background: linear-gradient(135deg, #006eff, #0055cc);
+        color: white; border-radius: 16px; padding: 28px;
+        text-align: center; margin-bottom: 20px;
+        box-shadow: 0 8px 24px rgba(0,110,255,.3);
+    }
+    .puntaje-card h2 { margin: 0 0 4px; font-size: 56px; font-weight: 800; }
+    .puntaje-card p  { margin: 0; opacity: .85; font-size: 14px; }
+
+    .seccion-titulo {
+        font-size: 15px; font-weight: 700; color: #081b3a;
+        margin: 0 0 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .seccion-titulo i { color: #006eff; }
+
+    .btn-enviar {
+        padding: 14px 28px; border: none; border-radius: 12px;
+        background: #006eff; color: #fff; font-size: 15px; font-weight: 700;
+        font-family: inherit; cursor: pointer; width: 100%;
+        box-shadow: 0 2px 8px rgba(0,110,255,.3);
+        transition: background .15s, transform .1s;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-enviar:hover { background: #0055cc; transform: translateY(-1px); }
+
+    .img-tarea {
+        max-width: 220px; border-radius: 12px;
+        object-fit: cover; border: 1px solid #e5e7eb;
+    }
+
+    .empty-preguntas {
+        text-align: center; color: #6b7280; padding: 40px;
+    }
+    .empty-preguntas i { font-size: 2.5rem; display: block; margin-bottom: 12px; color: #d1d5db; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Topbar -->
+<div class="topbar">
+    <div class="welcome">
+        <h2>Detalle de Tarea</h2>
+        <p>Responde las preguntas y envía tus respuestas</p>
+    </div>
+    <div class="user-area">
+        <div class="notification">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notification-count">0</span>
+        </div>
+    </div>
+</div>
+
+<!-- Botón volver -->
+<div class="page-header">
+    <a href="{% url 'tareas_alumno' %}" class="btn-volver">
+        <i class="fa-solid fa-arrow-left"></i> Volver a mis tareas
+    </a>
+</div>
+
+<!-- Resultado si ya respondió -->
+{% if puntaje_total > 0 %}
+<div class="puntaje-card">
+    <p style="font-size:13px;opacity:.7;margin-bottom:8px;">PUNTAJE OBTENIDO</p>
+    <h2>{{ puntaje_obtenido }} / {{ puntaje_total }}</h2>
+    <p>
+        {% if puntaje_obtenido == puntaje_total %}
+            🎉 ¡Perfecto! Respondiste todo correctamente
+        {% elif puntaje_obtenido >= puntaje_total|floatformat:0 %}
+            ✅ ¡Buen trabajo!
+        {% else %}
+            📝 Sigue practicando
+        {% endif %}
+    </p>
+</div>
+{% endif %}
+
+<!-- Info de la tarea -->
+<div class="detalle-card">
+    <h4>{{ tarea.titulo }}</h4>
+    {% if tarea.descripcion %}
+    <p style="margin-top:6px;">{{ tarea.descripcion }}</p>
+    {% endif %}
+    <div class="tarea-meta">
+        {% if tarea.fecha_entrega %}
+        <span><i class="fa-solid fa-calendar"></i> Fecha límite: {{ tarea.fecha_entrega }}</span>
+        {% endif %}
+        <span><i class="fa-solid fa-circle-question"></i> {{ tarea.preguntas.count }} pregunta{{ tarea.preguntas.count|pluralize }}</span>
+        <span><i class="fa-solid fa-star"></i>
+            {% with total=0 %}
+                {% for p in tarea.preguntas.all %}{{ p.puntaje }}{% endfor %} pts en total
+            {% endwith %}
+        </span>
+    </div>
+</div>
+
+<!-- Video -->
+{% if tarea.video %}
+<div class="detalle-card">
+    <p class="seccion-titulo"><i class="fa-solid fa-play"></i> Video de apoyo</p>
+    <div style="border-radius:12px;overflow:hidden;">
+        {% video tarea.video "100%x360" %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Imágenes -->
+{% if tarea.imagenes.all %}
+<div class="detalle-card">
+    <p class="seccion-titulo"><i class="fa-solid fa-image"></i> Imágenes</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        {% for img in tarea.imagenes.all %}
+        <img src="{{ img.imagen.url }}" class="img-tarea" alt="Imagen tarea">
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Preguntas -->
+{% if tarea.preguntas.all %}
+<form method="POST">
+    {% csrf_token %}
+
+    {% for pregunta in tarea.preguntas.all %}
+    <div class="pregunta-card">
+        <h5>
+            <div class="pregunta-header">
+                <span class="pregunta-num">{{ forloop.counter }}</span>
+                <span>
+                    {{ pregunta.enunciado }}
+                    <span style="font-size:12px;color:#9ca3af;font-weight:400;margin-left:6px;">
+                        ({{ pregunta.puntaje }} pt{{ pregunta.puntaje|pluralize }})
+                    </span>
+                </span>
+            </div>
+        </h5>
+
+        {% if pregunta.tipo == 'texto' %}
+        <div class="form-group">
+            <input type="text" name="pregunta_{{ pregunta.id }}"
+                   placeholder="Escribe tu respuesta aquí..." required>
+        </div>
+
+        {% elif pregunta.tipo == 'opcion' %}
+        <ul class="opciones-list">
+            {% for opcion in pregunta.opciones.all %}
+            <li>
+                <input type="radio"
+                       name="pregunta_{{ pregunta.id }}"
+                       value="{{ opcion.texto }}"
+                       id="op_{{ opcion.id }}" required>
+                <label for="op_{{ opcion.id }}" style="cursor:pointer;margin:0;flex:1;">
+                    {{ opcion.texto }}
+                </label>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <!-- Resultado por pregunta -->
+        {% if resultados %}
+            {% if resultados|dictsort:pregunta.id %}
+                {% if resultados.pregunta.id %}
+                    <span class="badge-resultado badge-correcto">✅ Correcto</span>
+                {% else %}
+                    <span class="badge-resultado badge-incorrecto">❌ Incorrecto</span>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="detalle-card" style="padding:20px;">
+        <button type="submit" class="btn-enviar">
+            <i class="fa-solid fa-paper-plane"></i> Enviar respuestas
+        </button>
+    </div>
+</form>
+
+{% else %}
+<div class="detalle-card empty-preguntas">
+    <i class="fa-solid fa-circle-info"></i>
+    <p style="font-size:15px;font-weight:500;margin-bottom:4px;">Sin preguntas</p>
+    <p style="font-size:13px;">Esta tarea no tiene preguntas asignadas.</p>
+</div>
+{% endif %}
+
+{% endblock %}

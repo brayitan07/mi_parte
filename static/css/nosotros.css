@@ -1,0 +1,70 @@
+/* =========================
+   SOBRE NOSOTROS (Mosaico de Imágenes)
+========================= */
+.sobre-nosotros-section {
+    background-color: #fff;
+}
+
+.subtitle-badge {
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+}
+
+.text-navy {
+    color: var(--dark-navy);
+}
+
+/* Configuración de las tarjetas del mosaico */
+.galeria-item {
+    height: 220px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.galeria-item:hover {
+    transform: scale(1.03);
+    box-shadow: var(--shadow-md) !important;
+    z-index: 5;
+}
+
+/* Desfase asimétrico para estilo moderno */
+.neg-mt-top {
+    margin-top: -24px;
+}
+
+/* Misión y Visión */
+.card-mision-vision {
+    border-left: 5px solid #006eff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-mision-vision:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md) !important;
+}
+
+.icon-container-mv {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ajustes Responsivos */
+@media (max-width: 991.98px) {
+    .galeria-item {
+        height: 180px;
+    }
+
+    .neg-mt-top {
+        margin-top: 0;
+    }
+
+    .sobre-nosotros-galeria-grid .col-6:nth-child(2) {
+        margin-top: 0 !important;
+    }
+
+    .sobre-nosotros-galeria-grid {
+        margin-bottom: 2rem;
+    }
+}

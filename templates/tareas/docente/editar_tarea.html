@@ -1,0 +1,149 @@
+{% extends 'docente/base.html' %}
+{% block title %}Editar Tarea{% endblock %}
+{% block active_tareas %}active{% endblock %}
+{% block search_placeholder %}Buscar tarea...{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .form-card h4 { margin: 0 0 20px; color: #081b3a; font-size: 16px; font-weight: 700; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+        display: block; font-size: 12px; font-weight: 600;
+        color: #64748b; text-transform: uppercase;
+        letter-spacing: .04em; margin-bottom: 6px;
+    }
+    .form-group input, .form-group textarea {
+        width: 100%; padding: 10px 14px;
+        border: 1.5px solid #e5e7eb; border-radius: 12px;
+        background: #f8fafc; font-family: inherit; font-size: 14px;
+        color: #081b3a; outline: none;
+        transition: border-color .2s, box-shadow .2s;
+        box-sizing: border-box;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+        border-color: #006eff;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(0,110,255,.1);
+    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+
+    .pregunta-block {
+        background: #f8fafc;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+    .pregunta-block h5 { margin: 0 0 14px; font-size: 14px; color: #374151; }
+
+    .opcion-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .opcion-row label { font-size: 13px; color: #374151; min-width: 20px; margin: 0; text-transform: none; letter-spacing: 0; }
+    .opcion-row input[type="text"] { flex: 1; }
+
+    .btn-guardar {
+        padding: 10px 24px; border: none; border-radius: 10px;
+        background: #006eff; color: #fff; font-size: 14px; font-weight: 600;
+        font-family: inherit; cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,110,255,.25);
+        transition: background .15s, transform .1s;
+    }
+    .btn-guardar:hover { background: #0055cc; transform: translateY(-1px); }
+
+    .btn-cancelar {
+        padding: 10px 24px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+        background: transparent; color: #6b7280; font-size: 14px; font-weight: 600;
+        font-family: inherit; cursor: pointer; text-decoration: none;
+        transition: background .15s;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-cancelar:hover { background: #f3f4f6; }
+
+    .acciones { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <div>
+        <h3 style="margin:0;color:#081b3a;">Editar Tarea</h3>
+        <small style="color:#6b7280;">Modifica los datos de la tarea</small>
+    </div>
+    <a href="{% url 'listar_tareas' %}" class="btn-cancelar">
+        <i class="fa-solid fa-arrow-left"></i> Volver
+    </a>
+</div>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <!-- Datos generales -->
+    <div class="form-card">
+        <h4><i class="fa-solid fa-pen" style="color:#006eff;margin-right:8px;"></i>Información General</h4>
+        <div class="form-group">
+            <label>Título</label>
+            <input type="text" name="titulo" value="{{ tarea.titulo }}" required>
+        </div>
+        <div class="form-group">
+            <label>Descripción</label>
+            <textarea name="descripcion">{{ tarea.descripcion }}</textarea>
+        </div>
+    </div>
+
+    <!-- Preguntas -->
+    {% for pregunta in tarea.preguntas.all %}
+    <div class="form-card pregunta-block-wrap">
+        <h4><i class="fa-solid fa-circle-question" style="color:#006eff;margin-right:8px;"></i>Pregunta {{ forloop.counter }}</h4>
+        <input type="hidden" name="pregunta_id[]" value="{{ pregunta.id }}">
+
+        <div class="form-group">
+            <label>Enunciado</label>
+            <textarea name="preguntas[]">{{ pregunta.enunciado }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Tipo</label>
+            <select name="tipos[]" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:12px;background:#f8fafc;font-size:14px;color:#081b3a;outline:none;font-family:inherit;">
+                <option value="texto"  {% if pregunta.tipo == 'texto'  %}selected{% endif %}>Respuesta abierta</option>
+                <option value="opcion" {% if pregunta.tipo == 'opcion' %}selected{% endif %}>Opción múltiple</option>
+            </select>
+        </div>
+
+        {% if pregunta.tipo == 'texto' %}
+        <div class="form-group">
+            <label>Respuesta correcta</label>
+            <input type="text" name="respuestas[]" value="{{ pregunta.respuestacorrecta.respuesta }}">
+        </div>
+        {% elif pregunta.tipo == 'opcion' %}
+        <div class="form-group">
+            <label>Opciones</label>
+            {% for opcion in pregunta.opciones.all %}
+            <div class="opcion-row">
+                <input type="hidden" name="opcion_id_{{ pregunta.id }}[]" value="{{ opcion.id }}">
+                <label>{{ forloop.counter }}.</label>
+                <input type="text" name="opcion_texto_{{ pregunta.id }}[]" value="{{ opcion.texto }}">
+                <input type="radio" name="correcta_{{ pregunta.id }}" value="{{ forloop.counter }}"
+                    {% if opcion.es_correcta %}checked{% endif %}>
+                <label style="color:#10b981;font-size:12px;">Correcta</label>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="acciones">
+        <button type="submit" class="btn-guardar">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
+        </button>
+        <a href="{% url 'listar_tareas' %}" class="btn-cancelar">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

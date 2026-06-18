@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Pregunta{% endblock}
+
+{% block content %}
+
+<h2>{{ tarea.titulo }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    {% for pregunta in tarea.preguntas.all %}
+
+        <h5>{{ pregunta.enunciado }}</h5>
+
+        {% if pregunta.tipo == 'texto' %}
+
+            <input
+                type="text"
+                name="pregunta_{{ pregunta.id }}"
+                class="form-control">
+
+        {% else %}
+
+            {% for opcion in pregunta.opciones.all %}
+
+                <div>
+                    <input
+                        type="radio"
+                        name="pregunta_{{ pregunta.id }}"
+                        value="{{ opcion.id }}">
+
+                    {{ opcion.texto }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+        <hr>
+
+    {% endfor %}
+
+    <button class="btn btn-success">
+        Enviar
+    </button>
+
+</form>
+
+{% endblock %}

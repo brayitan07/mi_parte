@@ -1,0 +1,209 @@
+{% extends 'docente/base.html' %}
+{% block title %}Historial de Asistencia{% endblock %}
+{% block active_asistencia %}active{% endblock %}
+{% block search_placeholder %}Buscar estudiante...{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filtro-form{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+    .select-group{display:flex;flex-direction:column;gap:6px;}
+    .select-group label{font-size:12px;font-weight:600;color:#64748b;letter-spacing:.04em;text-transform:uppercase;}
+    .select-wrap{position:relative;}
+    .select-wrap i.chevron{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:13px;color:#94a3b8;pointer-events:none;}
+    .select-wrap select, .input-fecha{
+        appearance:none;-webkit-appearance:none;
+        padding:10px 36px 10px 14px;
+        border:1.5px solid #e5e7eb;border-radius:12px;
+        background:#f8fafc;font-family:'Segoe UI',sans-serif;
+        font-size:14px;color:#081b3a;cursor:pointer;outline:none;
+        min-width:160px;
+        transition:border-color .2s,background .2s,box-shadow .2s;
+    }
+    .input-fecha{padding:10px 14px;cursor:default;}
+    .select-wrap select:hover,.input-fecha:hover{border-color:#94a3b8;background:#fff;}
+    .select-wrap select:focus,.input-fecha:focus{border-color:#006eff;background:#fff;box-shadow:0 0 0 3px rgba(0,110,255,.1);}
+
+    .btn-filtrar{
+        padding:10px 20px;border:none;border-radius:12px;
+        background:#006eff;color:#fff;font-size:14px;font-weight:600;
+        font-family:inherit;cursor:pointer;
+        display:inline-flex;align-items:center;gap:8px;
+        box-shadow:0 2px 6px rgba(0,110,255,.25);
+        transition:background .15s,transform .1s;
+    }
+    .btn-filtrar:hover{background:#0055cc;transform:translateY(-1px);}
+
+    .btn-volver{
+        padding:9px 18px;border:1.5px solid #006eff;border-radius:10px;
+        background:transparent;color:#006eff;font-size:14px;font-weight:600;
+        font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+        text-decoration:none;transition:background .15s,color .15s;
+    }
+    .btn-volver:hover{background:#006eff;color:#fff;}
+
+    .badge-estado{
+        display:inline-flex;align-items:center;gap:6px;
+        padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;
+    }
+    .badge-presente{background:#d1fae5;color:#065f46;}
+    .badge-tardanza{background:#fef3c7;color:#92400e;}
+    .badge-ausente {background:#fee2e2;color:#991b1b;}
+
+    .btn-delete-row{
+        width:34px;height:34px;border:none;border-radius:8px;
+        background:#fee2e2;color:#ef4444;cursor:pointer;font-size:14px;
+        display:inline-flex;align-items:center;justify-content:center;
+        transition:background .15s,transform .1s,box-shadow .15s;
+        box-shadow:0 1px 3px rgba(239,68,68,.15);
+    }
+    .btn-delete-row:hover{
+        background:#ef4444;color:#fff;
+        box-shadow:0 4px 10px rgba(239,68,68,.35);
+        transform:translateY(-1px);
+    }
+    .btn-delete-row:disabled{background:#f3f4f6;color:#d1d5db;cursor:not-allowed;box-shadow:none;}
+    .header-card{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="section-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h4 style="margin:0;"><i class="fa-solid fa-clock-rotate-left" style="color:#006eff;margin-right:8px;"></i>Historial de Asistencia</h4>
+        <a href="{% url 'asistencia_docente' %}" class="btn-volver">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+    </div>
+    <form method="GET" class="filtro-form">
+        <div class="select-group">
+            <label>Grado</label>
+            <div class="select-wrap">
+                <select name="curso">
+                    <option value="">Seleccionar grado</option>
+                    {% for curso in cursos %}
+                        <option value="{{ curso.id }}"
+                            {% if curso_sel and curso.id == curso_sel.id %}selected{% endif %}>
+                            {{ curso.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <i class="fa-solid fa-chevron-down chevron"></i>
+            </div>
+        </div>
+
+        <div class="select-group">
+            <label>Fecha</label>
+            <input type="date" name="fecha" class="input-fecha"
+                   value="{{ fecha_sel|date:'Y-m-d' }}">
+        </div>
+
+        <button type="submit" class="btn-filtrar">
+            <i class="fa-solid fa-magnifying-glass"></i> Buscar
+        </button>
+    </form>
+</div>
+
+{% if curso_sel %}
+<div class="section-card">
+    <div class="header-card">
+        <div>
+            <h4 style="margin:0;">{{ curso_sel.nombre }} — {{ fecha_sel }}</h4>
+            <small style="color:#6b7280;">{{ filas|length }} estudiante{{ filas|length|pluralize }}</small>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Estudiante</th>
+                <th>Estado</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fila in filas %}
+            <tr data-estudiante="{{ fila.estudiante.id }}" data-fecha="{{ fecha_sel|date:'Y-m-d' }}">
+                <td>{{ forloop.counter }}</td>
+                <td>{{ fila.estudiante.nombre }}</td>
+                <td>
+                    {% if fila.asistencia %}
+                        <span class="badge-estado badge-{{ fila.asistencia.estado }}">
+                            {% if fila.asistencia.estado == 'presente' %}✅ Presente
+                            {% elif fila.asistencia.estado == 'tardanza' %}⏰ Tardanza
+                            {% else %}❌ Ausente{% endif %}
+                        </span>
+                    {% else %}
+                        <span style="color:#9ca3af;font-size:13px;">Sin registro</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="btn-delete-row btn-eliminar-asis"
+                            data-estudiante="{{ fila.estudiante.id }}"
+                            data-fecha="{{ fecha_sel|date:'Y-m-d' }}"
+                            {% if not fila.asistencia %}disabled title="Sin registro"{% endif %}>
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align:center;color:#6b7280;padding:30px;">
+                    No hay estudiantes en este curso.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+const CSRF = '{{ csrf_token }}';
+const URL_ELIMINAR = '{% url "eliminar_asistencia" %}';
+
+document.querySelectorAll('.btn-eliminar-asis').forEach(btn => {
+    btn.addEventListener('click', async function () {
+        if (!confirm('¿Eliminar el registro de asistencia de este estudiante?')) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        const body = new URLSearchParams({
+            csrfmiddlewaretoken: CSRF,
+            estudiante_id: btn.dataset.estudiante,
+            fecha:         btn.dataset.fecha,
+        });
+
+        try {
+            const res = await fetch(URL_ELIMINAR, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': CSRF },
+                body: body,
+            });
+
+            if (res.ok) {
+                const fila = btn.closest('tr');
+                fila.querySelector('td:nth-child(3)').innerHTML =
+                    '<span style="color:#9ca3af;font-size:13px;">Sin registro</span>';
+                btn.disabled = true;
+                btn.title = 'Sin registro';
+                btn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+            } else { throw new Error(); }
+        } catch {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+            alert('Error al eliminar. Intenta de nuevo.');
+        }
+    });
+});
+</script>
+
+{% else %}
+<div class="section-card" style="text-align:center;color:#6b7280;padding:40px;">
+    <i class="fa-solid fa-calendar-xmark" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
+    Selecciona un grado y una fecha para ver el historial.
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'docente/base.html' %}
+{% block title %}Configuración{% endblock %}
+{% block active_configuracion %}active{% endblock %}
+
+{% block content %}
+<form method="POST">
+{% csrf_token %}
+<input type="hidden" name="guardar_perfil" value="1">
+<div class="section-card">
+    <h3>Configuración de Cuenta</h3><br>
+    <div class="config-grid">
+        <div>
+            <label>Nombre Completo</label>
+            <input type="text" name="nombre" class="config-input" value="{{ docente.nombre|default:'' }}">
+        </div>
+        <div>
+            <label>Correo Electrónico</label>
+            <input type="email" name="correo" class="config-input" value="{{ docente.correo|default:'' }}">
+        </div>
+        <div>
+            <label>Teléfono</label>
+            <input type="text" name="telefono" class="config-input" value="{{ docente.telefono|default:'' }}">
+        </div>
+        <div>
+            <label>Materias Asignadas</label>
+            <input type="text" class="config-input" value="{% for m in docente.materias.all %}{{ m.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}" readonly>
+        </div>
+    </div>
+    <br>
+    <button type="submit" class="btn-save">Guardar Cambios</button>
+</div>
+</form>
+
+<div class="section-card">
+    <h3>Preferencias</h3><br>
+    <div class="preferences">
+        <label><input type="checkbox" checked> Recibir notificaciones por correo</label>
+        <br><br>
+        <label><input type="checkbox" checked> Mostrar recordatorios académicos</label>
+    </div>
+</div>
+
+<div class="section-card">
+    <h3>Mis Cursos Asignados</h3><br>
+    <div class="grados">
+        {% for curso in docente.cursos.all %}
+            <button class="grado">{{ curso.nombre }}</button>
+        {% empty %}
+            <p style="color:#6b7280;">No hay cursos asignados.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

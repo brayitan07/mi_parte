@@ -1,0 +1,119 @@
+{% extends 'docente/base.html' %}
+{% block title %}Tareas{% endblock %}
+{% block active_tareas %}active{% endblock %}
+{% block search_placeholder %}Buscar actividad...{% endblock %}
+
+{% block extra_css %}
+<style>
+    .badge-estado{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;}
+    .badge-pendiente{background:#fff3cd;color:#b45309;}
+    .badge-entregada{background:#d1fae5;color:#065f46;}
+    .badge-vencida{background:#fee2e2;color:#991b1b;}
+    .tarea-card{background:white;border-radius:16px;padding:20px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;}
+    .tarea-info h5{margin:0 0 4px;font-size:15px;}
+    .tarea-info small{color:#6b7280;}
+    .nueva-tarea-btn{background:#006eff;color:white;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;justify-content:center;align-items:center;}
+    .modal-overlay.active{display:flex;}
+    .modal-box{background:white;border-radius:20px;padding:30px;width:480px;}
+    .modal-box h4{margin-bottom:20px;}
+    .modal-box input,.modal-box select,.modal-box textarea{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:15px;font-family:inherit;}
+    .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+    .btn-cancel{background:#f3f4f6;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;}
+    .btn-eliminar{background:#ef4444;color:white;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;}
+    .nueva-tarea-btn{
+    background:#006eff;
+    color:white;
+    border:none;
+    padding:10px 20px;
+    border-radius:10px;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats">
+    <div class="stat-card">
+        <div class="icon blue"><i class="fa-solid fa-book-open"></i></div>
+        <h3>{{ total_tareas }}</h3><p>Total Tareas</p>
+    </div>
+    <div class="stat-card">
+        <div class="icon orange"><i class="fa-solid fa-clock"></i></div>
+        <h3>{{ pendientes }}</h3><p>Pendientes</p>
+    </div>
+    <div class="stat-card">
+        <div class="icon green"><i class="fa-solid fa-check-circle"></i></div>
+        <h3>{{ entregadas }}</h3><p>Entregadas</p>
+    </div>
+    <div class="stat-card">
+        <div class="icon purple"><i class="fa-solid fa-user-graduate"></i></div>
+        <h3>{{ docente.cursos.count|default:"0" }}</h3><p>Cursos Asignados</p>
+    </div>
+</div>
+
+<div class="section-card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+    <div>
+        <h4 style="margin:0;">Actividades Académicas</h4>
+        <small style="color:#6b7280;">
+            {% for materia in docente.materias.all %}{{ materia.nombre }}{% if not forloop.last %} • {% endif %}{% endfor %}
+        </small>
+    </div>
+    <a href="{% url 'crear_tarea' %}" class="nueva-tarea-btn">
+    <i class="fa-solid fa-plus"></i> Nueva Actividad
+</a>
+</div>
+
+{% for tarea in tareas %}
+<div class="tarea-card">
+    <div class="tarea-info">
+        <h5>{{ tarea.titulo }}</h5>
+        <small>{{ tarea.curso }} · {{ tarea.materia }} · Fecha límite: {{ tarea.fecha_limite }}</small>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+        <span class="badge-estado badge-{{ tarea.estado }}">{{ tarea.get_estado_display }}</span>
+        <a href="{% url 'eliminar_tarea' tarea.id %}" class="btn-eliminar" onclick="return confirm('¿Eliminar esta tarea?')">
+            <i class="fa-solid fa-trash"></i>
+        </a>
+    </div>
+</div>
+{% empty %}
+<div class="section-card" style="text-align:center;color:#6b7280;padding:40px;">
+    No hay tareas registradas. ¡Crea la primera!
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<div class="modal-overlay" id="modalTarea">
+    <div class="modal-box">
+        <h4><i class="fa-solid fa-book"></i> Crear Actividad Académica</h4>
+        <form method="POST" action="{% url 'tarea_docente' %}">
+            {% csrf_token %}
+            <input type="text" name="titulo" placeholder="Título de la actividad" required>
+            <select name="materia" required>
+                <option selected disabled>Seleccionar materia</option>
+                {% for materia in materias %}
+                    <option value="{{ materia.id }}">{{ materia.nombre }}</option>
+                {% endfor %}
+            </select>
+            <select name="curso" required>
+                <option selected disabled>Seleccionar grado</option>
+                {% for curso in cursos %}
+                    <option value="{{ curso.id }}">{{ curso.nombre }}</option>
+                {% endfor %}
+            </select>
+            <input type="date" name="fecha_limite" required>
+            <textarea name="descripcion" rows="4" placeholder="Descripción de la actividad..."></textarea>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="document.getElementById('modalTarea').classList.remove('active')">Cancelar</button>
+                <button type="submit" class="nueva-tarea-btn"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

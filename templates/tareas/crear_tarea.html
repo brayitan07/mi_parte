@@ -1,34 +1,268 @@
-{% extends 'base.html' %}
+{% extends 'docente/base.html' %}
 {% load static %}
 
 {% block title %}Crear Tarea{% endblock %}
+{% block active_tareas %}active{% endblock %}
+{% block search_placeholder %}Buscar tarea...{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white; border-radius: 16px; padding: 28px;
+        margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .form-card h4 {
+        margin: 0 0 20px; color: #081b3a; font-size: 15px;
+        font-weight: 700; display: flex; align-items: center; gap: 8px;
+    }
+    .form-card h4 i { color: #006eff; }
+
+    .fgroup { margin-bottom: 16px; }
+    .fgroup label {
+        display: block; font-size: 12px; font-weight: 600;
+        color: #64748b; text-transform: uppercase;
+        letter-spacing: .04em; margin-bottom: 6px;
+    }
+    .fgroup input[type=text],
+    .fgroup input[type=date],
+    .fgroup input[type=file],
+    .fgroup textarea,
+    .fgroup select {
+        width: 100%; padding: 10px 14px;
+        border: 1.5px solid #e5e7eb; border-radius: 12px;
+        background: #f8fafc; font-family: inherit;
+        font-size: 14px; color: #081b3a; outline: none;
+        transition: border-color .2s, box-shadow .2s;
+        box-sizing: border-box;
+    }
+    .fgroup input:focus, .fgroup textarea:focus, .fgroup select:focus {
+        border-color: #006eff; background: #fff;
+        box-shadow: 0 0 0 3px rgba(0,110,255,.1);
+    }
+    .fgroup textarea { resize: vertical; min-height: 90px; }
+
+    /* Pregunta */
+    .pregunta-item {
+        background: #f8fafc; border: 1.5px solid #e5e7eb;
+        border-radius: 14px; padding: 22px; margin-bottom: 16px;
+        position: relative;
+    }
+    .pregunta-header {
+        display: flex; justify-content: space-between;
+        align-items: center; margin-bottom: 16px;
+    }
+    .pregunta-header span {
+        font-size: 13px; font-weight: 700; color: #006eff;
+        background: #eff6ff; padding: 4px 12px; border-radius: 20px;
+    }
+
+    .btn-eliminar-preg {
+        width: 30px; height: 30px; border: none; border-radius: 8px;
+        background: #fee2e2; color: #ef4444; cursor: pointer;
+        font-size: 13px; display: inline-flex; align-items: center;
+        justify-content: center; transition: background .15s;
+    }
+    .btn-eliminar-preg:hover { background: #ef4444; color: #fff; }
+
+    .opciones-multiples { display: none; }
+    .opciones-multiples.visible { display: block; }
+    .respuesta-abierta.oculta { display: none; }
+
+    /* Botones principales */
+    .btn-agregar {
+        padding: 9px 18px; border: 1.5px dashed #006eff;
+        border-radius: 10px; background: transparent; color: #006eff;
+        font-size: 13px; font-weight: 600; font-family: inherit;
+        cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+        transition: background .15s;
+    }
+    .btn-agregar:hover { background: #eff6ff; }
+
+    .btn-guardar {
+        padding: 12px 28px; border: none; border-radius: 12px;
+        background: #006eff; color: #fff; font-size: 15px; font-weight: 700;
+        font-family: inherit; cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,110,255,.3);
+        transition: background .15s, transform .1s;
+        display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-guardar:hover { background: #0055cc; transform: translateY(-1px); }
+
+    .btn-cancelar {
+        padding: 12px 20px; border: 1.5px solid #e5e7eb; border-radius: 12px;
+        background: transparent; color: #6b7280; font-size: 14px;
+        font-weight: 600; font-family: inherit; cursor: pointer;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        transition: background .15s;
+    }
+    .btn-cancelar:hover { background: #f3f4f6; }
+
+    .form-acciones { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<<h1>Crear Tarea</h1>
 
-    <div class="container mt-5">
-        <form class="form-control" action="{% url 'crear_tarea' %}" method="post">
-            {% csrf_token %}
-            {{ formTarea.as_p }}
-            {{ UrlForm.as_p }}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <div>
+        <h3 style="margin:0;color:#081b3a;">Nueva Tarea</h3>
+        <small style="color:#6b7280;">Completa los datos para crear una actividad académica</small>
+    </div>
+    <a href="{% url 'listar_tareas' %}" class="btn-cancelar">
+        <i class="fa-solid fa-arrow-left"></i> Volver
+    </a>
+</div>
 
-            {% if video_id %}
-            <iframe width="100%" height="400" src="https://www.youtube.com/embed/{{ video_id }}" allowfullscreen>
-            </iframe>
-            {% endif %}
+<form action="{% url 'crear_tarea' %}" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
 
+    <!-- Info general -->
+    <div class="form-card">
+        <h4><i class="fa-solid fa-book-open"></i> Información General</h4>
 
-            <div id="contenido">{% include 'tareas/reproductor.html' %}
-            </div>
-
-            <button id="btnCrear" class="btn btn-primary" data-url="{% url 'crear_tarea' %}">
-                Crear
-            </button>
-        </form>
+        <div class="fgroup">
+            <label>Título *</label>
+            <input type="text" name="titulo" placeholder="Ej: Taller de ecuaciones" required>
+        </div>
+        <div class="fgroup">
+            <label>Descripción</label>
+            <textarea name="descripcion" placeholder="Describe el objetivo de la tarea..."></textarea>
+        </div>
+        <div class="fgroup">
+            <label>Fecha de entrega</label>
+            <input type="date" name="fecha_entrega">
+        </div>
+        <div class="fgroup">
+            <label>Video (URL YouTube)</label>
+            <input type="text" name="video" placeholder="https://www.youtube.com/watch?v=...">
+        </div>
+        <div class="fgroup">
+            <label>Imagen</label>
+            <input type="file" name="imagen" accept="image/*">
+        </div>
     </div>
 
-    {% endblock %}
+    <!-- Preguntas -->
+    <div class="form-card">
+        <h4><i class="fa-solid fa-circle-question"></i> Preguntas</h4>
 
-    """{% block js %}
-    <!--<script src="{% static 'js/crear_tarea.js' %}"></script>-->
-    {% endblock %}"""
+        <div id="contenedor-preguntas"></div>
+
+        <button type="button" id="agregarPregunta" class="btn-agregar">
+            <i class="fa-solid fa-plus"></i> Agregar pregunta
+        </button>
+    </div>
+
+    <div class="form-acciones">
+        <button type="submit" class="btn-guardar">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar Tarea
+        </button>
+        <a href="{% url 'listar_tareas' %}" class="btn-cancelar">Cancelar</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let contadorPreguntas = 0;
+
+function crearBloquePregunta() {
+    contadorPreguntas++;
+    const div = document.createElement('div');
+    div.className = 'pregunta-item';
+    div.innerHTML = `
+        <div class="pregunta-header">
+            <span><i class="fa-solid fa-circle-question"></i> Pregunta ${contadorPreguntas}</span>
+            <button type="button" class="btn-eliminar-preg" title="Eliminar">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+
+        <div class="fgroup">
+            <label>Enunciado *</label>
+            <input type="text" name="preguntas[]" placeholder="Escribe la pregunta..." required>
+        </div>
+
+        <div class="fgroup">
+            <label>Tipo de pregunta</label>
+            <select name="tipos[]" class="tipo-pregunta">
+                <option value="texto">Respuesta abierta</option>
+                <option value="opcion">Opción múltiple</option>
+            </select>
+        </div>
+
+        <div class="respuesta-abierta fgroup">
+            <label>Respuesta correcta</label>
+            <input type="text" name="respuestas[]" placeholder="Respuesta esperada...">
+        </div>
+
+        <div class="opciones-multiples">
+            <div class="fgroup">
+                <label>Opción A</label>
+                <input type="text" name="opcion_a[]" placeholder="Opción A">
+            </div>
+            <div class="fgroup">
+                <label>Opción B</label>
+                <input type="text" name="opcion_b[]" placeholder="Opción B">
+            </div>
+            <div class="fgroup">
+                <label>Opción C</label>
+                <input type="text" name="opcion_c[]" placeholder="Opción C">
+            </div>
+            <div class="fgroup">
+                <label>Opción D</label>
+                <input type="text" name="opcion_d[]" placeholder="Opción D">
+            </div>
+            <div class="fgroup">
+                <label>Opción correcta</label>
+                <select name="correcta[]">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                </select>
+            </div>
+        </div>
+    `;
+
+    // Toggle tipo
+    div.querySelector('.tipo-pregunta').addEventListener('change', function () {
+        const abierta = div.querySelector('.respuesta-abierta');
+        const multiple = div.querySelector('.opciones-multiples');
+        if (this.value === 'opcion') {
+            abierta.classList.add('oculta');
+            multiple.classList.add('visible');
+        } else {
+            abierta.classList.remove('oculta');
+            multiple.classList.remove('visible');
+        }
+    });
+
+    // Eliminar
+    div.querySelector('.btn-eliminar-preg').addEventListener('click', function () {
+        const items = document.querySelectorAll('.pregunta-item');
+        if (items.length > 1) {
+            div.remove();
+            renumerarPreguntas();
+        } else {
+            alert('Debe haber al menos una pregunta.');
+        }
+    });
+
+    document.getElementById('contenedor-preguntas').appendChild(div);
+}
+
+function renumerarPreguntas() {
+    document.querySelectorAll('.pregunta-item').forEach((item, i) => {
+        item.querySelector('.pregunta-header span').innerHTML =
+            `<i class="fa-solid fa-circle-question"></i> Pregunta ${i + 1}`;
+    });
+    contadorPreguntas = document.querySelectorAll('.pregunta-item').length;
+}
+
+document.getElementById('agregarPregunta').addEventListener('click', crearBloquePregunta);
+
+// Crear primera pregunta al cargar
+crearBloquePregunta();
+</script>
+{% endblock %}

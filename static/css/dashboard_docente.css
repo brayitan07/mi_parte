@@ -284,3 +284,21 @@ input[type="number"] {
     font-size: 15px;
     color: var(--dark);
 }
+.nueva-tarea-btn{
+    background:#006eff;
+    color:white;
+    border:none;
+    padding:10px 20px;
+    border-radius:10px;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-weight:500;
+}
+
+.nueva-tarea-btn:hover{
+    background:#0057cc;
+    color:white;
+}
