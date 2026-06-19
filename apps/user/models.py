@@ -1,4 +1,3 @@
-# apps/user/models.py
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -20,8 +19,10 @@ class User(AbstractUser):
         Role,
         on_delete=models.SET_NULL,
         null=True, blank=True,
-        verbose_name='Rol'
+        related_name='usuarios'
     )
+    # El curso del estudiante lo maneja apps.docente.Estudiante
+    # No se duplica aquí para evitar dependencias circulares
 
     def __str__(self):
         return self.nombre if self.nombre else self.username

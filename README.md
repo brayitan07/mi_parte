@@ -42,6 +42,8 @@ O instalar manualmente:
 ```bash
 pip install django
 pip install django-allauth
+pip install PyJWT
+pip install cryptography
 pip install django-embed-video
 pip install pillow
 pip install reportlab

@@ -79,7 +79,7 @@ if (logoutBtn) {
 
             localStorage.removeItem("rol");
 
-            window.location.href = "index.html";
+            window.location.href = "/cerrar/";
         }
 
     });

@@ -1,10 +1,10 @@
-# apps/docente/models.py
 from django.db import models
 from django.conf import settings
 
 
 class Curso(models.Model):
-    nombre = models.CharField(max_length=50)
+    nombre      = models.CharField(max_length=50)
+    descripcion = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.nombre
@@ -45,7 +45,7 @@ class Docente(models.Model):
 
 
 class AsignacionDocente(models.Model):
-    """Un docente puede dictar varias materias en varios cursos."""
+    """Un docente dicta una materia en un curso específico."""
     docente = models.ForeignKey(Docente, on_delete=models.CASCADE, related_name='asignaciones')
     materia = models.ForeignKey(Materia, on_delete=models.CASCADE, related_name='asignaciones')
     curso   = models.ForeignKey(Curso,   on_delete=models.CASCADE, related_name='asignaciones')
@@ -137,8 +137,8 @@ class Tarea(models.Model):
         return f"{self.titulo} — {self.asignacion.curso}"
 
     class Meta:
-        verbose_name = 'Tarea'
-        verbose_name_plural = 'Tareas'
+        verbose_name = 'Tarea Docente'
+        verbose_name_plural = 'Tareas Docente'
 
 
 class Asistencia(models.Model):

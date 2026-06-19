@@ -31,7 +31,7 @@ def _get_docente(request):
 def dashboard_docente(request):
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     asignaciones = AsignacionDocente.objects.filter(docente=docente).select_related('materia', 'curso')
     tareas       = Tarea.objects.filter(asignacion__docente=docente)
@@ -54,7 +54,7 @@ def dashboard_docente(request):
 def cursos_docente(request):
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     asignaciones = (
         AsignacionDocente.objects
@@ -79,7 +79,7 @@ def tarea_docente(request):
     """Lista todas las tareas del docente."""
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     tareas = (
         Tarea.objects
@@ -100,7 +100,7 @@ def crear_tarea(request):
     """Muestra el formulario y crea una nueva tarea."""
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     asignaciones = (
         AsignacionDocente.objects
@@ -149,7 +149,7 @@ def crear_tarea(request):
 def detalle_tarea(request, id):
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     tarea = get_object_or_404(Tarea, id=id, asignacion__docente=docente)
     context = {
@@ -163,7 +163,7 @@ def detalle_tarea(request, id):
 def editar_tarea(request, id):
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     tarea        = get_object_or_404(Tarea, id=id, asignacion__docente=docente)
     asignaciones = (
@@ -210,7 +210,7 @@ def editar_tarea(request, id):
 def eliminar_tarea(request, id):
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     tarea = get_object_or_404(Tarea, id=id, asignacion__docente=docente)
     tarea.delete()
@@ -225,7 +225,7 @@ def eliminar_tarea(request, id):
 def calificaciones_docente(request):
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     # Cursos y materias que tiene este docente (para los <select>)
     asignaciones = (
@@ -366,7 +366,7 @@ def eliminar_nota(request):
 def reporte_notas(request):
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     cursos   = Curso.objects.filter(asignaciones__docente=docente).distinct()
     materias = Materia.objects.filter(asignaciones__docente=docente).distinct()
@@ -418,7 +418,7 @@ def exportar_reporte_pdf(request):
 
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     curso_id   = request.GET.get('curso')
     materia_id = request.GET.get('materia')
@@ -487,7 +487,7 @@ def exportar_reporte_excel(request):
 
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     curso_id   = request.GET.get('curso')
     materia_id = request.GET.get('materia')
@@ -553,7 +553,7 @@ def exportar_reporte_excel(request):
 def asistencia_docente(request):
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     # Cursos del docente para el selector
     cursos = Curso.objects.filter(asignaciones__docente=docente).distinct()
@@ -642,7 +642,7 @@ def guardar_asistencia(request):
 def historial_asistencia(request):
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     cursos = Curso.objects.filter(asignaciones__docente=docente).distinct()
 
@@ -709,7 +709,7 @@ def eliminar_asistencia(request):
 def mensajes_docente(request):
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     # Estudiantes de los cursos del docente
     cursos_docente = Curso.objects.filter(asignaciones__docente=docente).distinct()
@@ -762,7 +762,7 @@ def mensajes_docente(request):
 def configuracion_docente(request):
     docente = _get_docente(request)
     if not docente:
-        return redirect('login')
+        return redirect('iniciar_sesion')
 
     if request.method == 'POST':
         docente.nombre   = request.POST.get('nombre',   docente.nombre).strip()

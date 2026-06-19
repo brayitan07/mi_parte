@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     "apps.alumno",
 ]
 
-SITE_ID = 4
+SITE_ID = 6
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
@@ -64,7 +64,8 @@ ACCOUNT_SIGNUP_FIELDS = [
 
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
-LOGIN_REDIRECT_URL = "iniciar_sesion"
+LOGIN_REDIRECT_URL = "redireccion_usuario"
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
 LOGOUT_REDIRECT_URL = "iniciar_sesion"
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
@@ -156,3 +157,20 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # Default primary key field type
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Media files
+import os
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'bc320418@gmail.com'
+EMAIL_HOST_PASSWORD = 'ciqp zgyb ourn ezkj'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# CSRF
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000']
