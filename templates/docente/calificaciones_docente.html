@@ -14,6 +14,8 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 10px;
     }
 
     /* ── FILTRO ── */
@@ -74,7 +76,7 @@
         box-shadow: 0 0 0 3px rgba(0,110,255,.1);
     }
 
-    /* ── TABLA ── */
+    /* ── BOTONES ── */
     .btn-save-row {
         padding: 6px 14px;
         border: 1px solid #d1d5db;
@@ -93,10 +95,74 @@
     .btn-save-row.saving { opacity: .6; pointer-events: none; }
     .btn-save-row.saved  { border-color: #10b981; color: #065f46; background: #d1fae5; }
     .btn-save-row.error  { border-color: #ef4444; color: #991b1b; background: #fee2e2; }
+
+    .btn-reporte {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background .15s, color .15s, border-color .15s;
+    }
+
+    .btn-reporte-ver {
+        border: 1.5px solid #006eff;
+        color: #006eff;
+        background: transparent;
+    }
+    .btn-reporte-ver:hover { background: #006eff; color: #fff; }
+
+    .btn-reporte-pdf {
+        border: 1.5px solid #ef4444;
+        color: #ef4444;
+        background: #fff5f5;
+    }
+    .btn-reporte-pdf:hover { background: #ef4444; color: #fff; }
+
+    .btn-reporte-excel {
+        border: 1.5px solid #10b981;
+        color: #065f46;
+        background: #f0fdf4;
+    }
+    .btn-reporte-excel:hover { background: #10b981; color: #fff; }
+
+    .acciones-reporte {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+
+<div class="topbar">
+    <div class="welcome">
+        <h2>Calificaciones</h2>
+        <p>Registra y gestiona las notas de tus estudiantes</p>
+    </div>
+    <div class="user-area">
+        <div class="notification">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notification-count">0</span>
+        </div>
+        <div class="profile">
+            <img src="https://i.pravatar.cc/120?img=3" alt="Docente">
+            <div>
+                <strong>{{ docente.nombre }}</strong>
+                <small>Docente</small>
+            </div>
+        </div>
+    </div>
+</div>
+<br>
+
 <div class="stats">
     <div class="stat-card">
         <div class="icon blue"><i class="fa-solid fa-chart-bar"></i></div>
@@ -118,7 +184,7 @@
 
 <!-- FILTRO -->
 <div class="section-card">
-    <h4>Seleccionar Grupo</h4>
+    <h4 style="margin-bottom:16px;">Seleccionar Grupo</h4>
     <form method="GET" class="filtro-form" id="filtroForm">
 
         <div class="select-group">
@@ -160,8 +226,25 @@
 {% if curso_sel and materia_sel %}
 <div class="section-card">
     <div class="header-card">
-        <h4>{{ curso_sel.nombre }} - {{ materia_sel.nombre }}</h4>
+        <h4>{{ curso_sel.nombre }} — {{ materia_sel.nombre }}</h4>
+
+        <!-- BOTONES DE REPORTE -->
+        <div class="acciones-reporte">
+            <a href="{% url 'reporte_notas' %}?curso={{ curso_sel.id }}&materia={{ materia_sel.id }}"
+               class="btn-reporte btn-reporte-ver" target="_blank">
+                <i class="fa-solid fa-chart-bar"></i> Ver Reporte
+            </a>
+            <a href="{% url 'exportar_reporte_pdf' %}?curso={{ curso_sel.id }}&materia={{ materia_sel.id }}"
+               class="btn-reporte btn-reporte-pdf" target="_blank">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </a>
+            <a href="{% url 'exportar_reporte_excel' %}?curso={{ curso_sel.id }}&materia={{ materia_sel.id }}"
+               class="btn-reporte btn-reporte-excel">
+                <i class="fa-solid fa-file-excel"></i> Excel
+            </a>
+        </div>
     </div>
+
     <table>
         <thead>
             <tr>
@@ -225,12 +308,11 @@ const CSRF = '{{ csrf_token }}';
 const URL_GUARDAR = '{% url "guardar_nota" %}';
 
 document.querySelectorAll('tr[data-id]').forEach(fila => {
-    const tarea   = fila.querySelector('.inp-tarea');
-    const parcial = fila.querySelector('.inp-parcial');
-    const examen  = fila.querySelector('.inp-examen');
+    const tarea     = fila.querySelector('.inp-tarea');
+    const parcial   = fila.querySelector('.inp-parcial');
+    const examen    = fila.querySelector('.inp-examen');
     const celdaProm = fila.querySelector('.celda-promedio');
 
-    // Recalcula el promedio en tiempo real
     function actualizarPromedio() {
         const t = parseFloat(tarea.value)   || 0;
         const p = parseFloat(parcial.value) || 0;
@@ -242,7 +324,6 @@ document.querySelectorAll('tr[data-id]').forEach(fila => {
 
     [tarea, parcial, examen].forEach(inp => inp.addEventListener('input', actualizarPromedio));
 
-    // Guarda via fetch (sin recargar)
     fila.querySelector('.btn-guardar').addEventListener('click', async function () {
         const btn = this;
         btn.classList.add('saving');

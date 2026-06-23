@@ -3,7 +3,38 @@
 {% block active_inicio %}active{% endblock %}
 {% block search_placeholder %}Buscar estudiante...{% endblock %}
 
+{% block extra_css %}
+<style>
+    .dashboard-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start;}
+    .right-panel{display:flex;flex-direction:column;gap:20px;}
+    .action-btn{display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;margin-bottom:8px;background:#f8fafc;border:1.5px solid #e5e7eb;border-radius:12px;color:#081b3a;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;transition:background .2s,border-color .2s;box-sizing:border-box;}
+    .action-btn:hover{background:#eef4ff;border-color:#006eff;color:#006eff;}
+    .action-btn:last-child{margin-bottom:0;}
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="topbar">
+    <div class="welcome">
+        <h2>Bienvenido, {{ docente.nombre }}</h2>
+        <p>Resumen de tu actividad académica</p>
+    </div>
+    <div class="user-area">
+        <div class="notification">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notification-count">{{ mensajes_no_leidos|default:"0" }}</span>
+        </div>
+        <div class="profile">
+            <img src="https://i.pravatar.cc/120?img=3" alt="Docente">
+            <div>
+                <strong>{{ docente.nombre }}</strong>
+                <small>Docente</small>
+            </div>
+        </div>
+    </div>
+</div>
+<br>
+
 <div class="stats">
     <div class="stat-card">
         <div class="icon blue"><i class="fa-solid fa-user-graduate"></i></div>
@@ -11,7 +42,7 @@
     </div>
     <div class="stat-card">
         <div class="icon green"><i class="fa-solid fa-check"></i></div>
-        <h3>94%</h3><p>Asistencia</p>
+        <h3>{{ porcentaje_asistencia|default:"—" }}%</h3><p>Asistencia</p>
     </div>
     <div class="stat-card">
         <div class="icon orange"><i class="fa-solid fa-book-open"></i></div>
@@ -19,7 +50,7 @@
     </div>
     <div class="stat-card">
         <div class="icon purple"><i class="fa-solid fa-chart-line"></i></div>
-        <h3>{{ promedio|default:"0" }}</h3><p>Promedio</p>
+        <h3>{{ promedio|default:"—" }}</h3><p>Promedio</p>
     </div>
 </div>
 
@@ -36,9 +67,9 @@
 
 <div class="dashboard-grid">
     <div class="section-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <h4>Próximas Tareas</h4>
-            <button class="btn-save" onclick="window.location='{% url 'tarea_docente' %}'">Ver todas</button>
+            <button class="btn-save" onclick="window.location='{% url 'listar_tareas' %}'">Ver todas</button>
         </div>
         <table>
             <thead>
@@ -57,13 +88,20 @@
                     <td>{{ tarea.curso }}</td>
                     <td>{{ tarea.materia }}</td>
                     <td>{{ tarea.fecha_limite }}</td>
-                    <td><span style="padding:4px 10px; border-radius:20px; font-size:12px;
-                        background:{% if tarea.estado == 'entregada' %}#d1fae5{% elif tarea.estado == 'vencida' %}#fee2e2{% else %}#fff3cd{% endif %};
-                        color:{% if tarea.estado == 'entregada' %}#065f46{% elif tarea.estado == 'vencida' %}#991b1b{% else %}#b45309{% endif %};">
-                        {{ tarea.get_estado_display }}</span></td>
+                    <td>
+                        <span style="padding:4px 10px;border-radius:20px;font-size:12px;
+                            background:{% if tarea.estado == 'entregada' %}#d1fae5{% elif tarea.estado == 'vencida' %}#fee2e2{% else %}#fff3cd{% endif %};
+                            color:{% if tarea.estado == 'entregada' %}#065f46{% elif tarea.estado == 'vencida' %}#991b1b{% else %}#b45309{% endif %};">
+                            {{ tarea.get_estado_display }}
+                        </span>
+                    </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="5" style="text-align:center; color:#6b7280;">No hay tareas registradas.</td></tr>
+                <tr>
+                    <td colspan="5" style="text-align:center;color:#6b7280;padding:20px 0;">
+                        No hay tareas registradas.
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -72,7 +110,7 @@
     <div class="right-panel">
         <div class="section-card">
             <h4>Acciones Rápidas</h4>
-            <button class="action-btn" onclick="window.location='{% url 'tarea_docente' %}'">📝 Nueva Tarea</button>
+            <button class="action-btn" onclick="window.location='{% url 'crear_tarea' %}'">📝 Nueva Tarea</button>
             <button class="action-btn" onclick="window.location='{% url 'calificaciones_docente' %}'">📊 Calificaciones</button>
             <button class="action-btn" onclick="window.location='{% url 'asistencia_docente' %}'">✅ Registrar Asistencia</button>
             <button class="action-btn" onclick="window.location='{% url 'mensajes_docente' %}'">📨 Enviar Mensaje</button>

@@ -56,33 +56,66 @@ body {
 }
 
 .topbar {
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, .05);
 }
 
-.search-box {
-    background: white;
-    padding: 15px;
-    border-radius: 15px;
-    width: 400px;
+.welcome h2 {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
 }
 
-.search-box input {
-    border: none;
-    outline: none;
+.welcome p {
+    color: #64748b;
 }
 
-.user {
+.user-area {
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: 20px;
 }
 
-.user img {
-    width: 50px;
+.notification {
+    position: relative;
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+
+.notification-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: red;
+    color: white;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
+    font-size: .7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.profile small {
+    color: #64748b;
 }
 
 .stats {

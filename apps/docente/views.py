@@ -555,15 +555,25 @@ def asistencia_docente(request):
     if not docente:
         return redirect('iniciar_sesion')
 
-    # Cursos del docente para el selector
-    cursos = Curso.objects.filter(asignaciones__docente=docente).distinct()
+    from datetime import date
+    cursos    = Curso.objects.filter(asignaciones__docente=docente).distinct()
+    fecha_hoy = timezone.now().date()
 
-    curso_sel  = None
-    estudiantes = []
-    fecha_hoy  = timezone.now().date()
+    # Fecha seleccionada
+    fecha_str = request.GET.get('fecha')
+    if fecha_str:
+        try:
+            fecha_sel = date.fromisoformat(fecha_str)
+            if fecha_sel > fecha_hoy:
+                fecha_sel = fecha_hoy
+        except ValueError:
+            fecha_sel = fecha_hoy
+    else:
+        fecha_sel = fecha_hoy
 
-    # Asistencias ya registradas hoy para este curso (si se seleccionó)
-    asistencias_hoy = {}  # {estudiante.id: estado}
+    curso_sel       = None
+    estudiantes     = []
+    asistencias_map = {}
 
     curso_id = request.GET.get('curso')
     if curso_id:
@@ -571,20 +581,29 @@ def asistencia_docente(request):
         estudiantes = Estudiante.objects.filter(curso=curso_sel)
         asis = Asistencia.objects.filter(
             estudiante__in=estudiantes,
-            fecha=fecha_hoy,
+            fecha=fecha_sel,
         )
-        asistencias_hoy = {a.estudiante_id: a.estado for a in asis}
+        asistencias_map = {a.estudiante_id: a.estado for a in asis}
+
+    total     = len(estudiantes)
+    presentes = sum(1 for v in asistencias_map.values() if v == 'presente')
+    tardanzas = sum(1 for v in asistencias_map.values() if v == 'tardanza')
+    ausentes  = sum(1 for v in asistencias_map.values() if v == 'ausente')
 
     context = {
-        'docente':         docente,
-        'cursos':          cursos,
-        'curso_sel':       curso_sel,
-        'estudiantes':     estudiantes,
-        'asistencias_hoy': asistencias_hoy,
-        'fecha_hoy':       fecha_hoy,
+        'docente':        docente,
+        'cursos':         cursos,
+        'curso_sel':      curso_sel,
+        'estudiantes':    estudiantes,
+        'asistencias_map': asistencias_map,
+        'fecha_hoy':      fecha_hoy,
+        'fecha_sel':      fecha_sel,
+        'total':          total,
+        'presentes':      presentes,
+        'tardanzas':      tardanzas,
+        'ausentes':       ausentes,
     }
     return render(request, 'docente/asistencia_docente.html', context)
-
 
 @login_required
 @require_POST
@@ -644,38 +663,45 @@ def historial_asistencia(request):
     if not docente:
         return redirect('iniciar_sesion')
 
-    cursos = Curso.objects.filter(asignaciones__docente=docente).distinct()
+    from datetime import date
+    cursos  = Curso.objects.filter(asignaciones__docente=docente).distinct()
+    hoy     = timezone.now().date()
 
-    curso_sel  = None
-    fecha_sel  = None
-    filas      = []
+    curso_id  = request.GET.get('curso')
+    fecha_str = request.GET.get('fecha')
 
-    curso_id   = request.GET.get('curso')
-    fecha_str  = request.GET.get('fecha')   # el template manda "fecha", no "fecha_inicio"
+    # Fecha por defecto: hoy
+    if fecha_str:
+        try:
+            fecha_sel = date.fromisoformat(fecha_str)
+        except ValueError:
+            fecha_sel = hoy
+    else:
+        fecha_sel = hoy
 
-    if curso_id and fecha_str:
-        curso_sel = get_object_or_404(Curso, id=curso_id)
-        fecha_sel = fecha_str  # 'YYYY-MM-DD', Django lo compara bien contra un DateField
+    curso_sel = None
+    filas     = []
 
+    if curso_id:
+        curso_sel   = get_object_or_404(Curso, id=curso_id)
         estudiantes = Estudiante.objects.filter(curso=curso_sel)
-
         asistencias = Asistencia.objects.filter(
             estudiante__in=estudiantes,
             fecha=fecha_sel,
         )
         asistencia_map = {a.estudiante_id: a for a in asistencias}
-
         filas = [
             {'estudiante': est, 'asistencia': asistencia_map.get(est.id)}
             for est in estudiantes
         ]
 
     context = {
-        'docente':    docente,
-        'cursos':     cursos,
-        'curso_sel':  curso_sel,
-        'fecha_sel':  fecha_sel,
-        'filas':      filas,
+        'docente':   docente,
+        'cursos':    cursos,
+        'curso_sel': curso_sel,
+        'fecha_sel': fecha_sel,
+        'filas':     filas,
+        'hoy':       hoy,
     }
     return render(request, 'docente/historial_asistencia.html', context)
 
@@ -686,18 +712,27 @@ def eliminar_asistencia(request):
     if not docente:
         return JsonResponse({'error': 'No autorizado'}, status=403)
 
-    asistencia_id = request.POST.get('asistencia_id')
-    asistencia    = get_object_or_404(Asistencia, id=asistencia_id)
+    estudiante_id = request.POST.get('estudiante_id')
+    fecha         = request.POST.get('fecha')
 
-    # Verificamos que el estudiante pertenezca a un curso del docente
+    if not (estudiante_id and fecha):
+        return JsonResponse({'error': 'Faltan datos'}, status=400)
+
+    estudiante = get_object_or_404(Estudiante, id=estudiante_id)
+
+    # Verificar que el estudiante pertenezca a un curso del docente
     es_del_docente = AsignacionDocente.objects.filter(
-        docente=docente, curso=asistencia.estudiante.curso
+        docente=docente, curso=estudiante.curso
     ).exists()
 
     if not es_del_docente:
         return JsonResponse({'error': 'No autorizado'}, status=403)
 
-    asistencia.delete()
+    Asistencia.objects.filter(
+        estudiante=estudiante,
+        fecha=fecha,
+    ).delete()
+
     return JsonResponse({'ok': True})
 
 

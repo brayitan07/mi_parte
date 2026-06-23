@@ -10,7 +10,7 @@
     .select-group label{font-size:12px;font-weight:600;color:#64748b;letter-spacing:.04em;text-transform:uppercase;}
     .select-wrap{position:relative;}
     .select-wrap i.chevron{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:13px;color:#94a3b8;pointer-events:none;}
-    .select-wrap select, .input-fecha{
+    .select-wrap select{
         appearance:none;-webkit-appearance:none;
         padding:10px 36px 10px 14px;
         border:1.5px solid #e5e7eb;border-radius:12px;
@@ -19,19 +19,52 @@
         min-width:160px;
         transition:border-color .2s,background .2s,box-shadow .2s;
     }
-    .input-fecha{padding:10px 14px;cursor:default;}
-    .select-wrap select:hover,.input-fecha:hover{border-color:#94a3b8;background:#fff;}
-    .select-wrap select:focus,.input-fecha:focus{border-color:#006eff;background:#fff;box-shadow:0 0 0 3px rgba(0,110,255,.1);}
+    .select-wrap select:hover{border-color:#94a3b8;background:#fff;}
+    .select-wrap select:focus{border-color:#006eff;background:#fff;box-shadow:0 0 0 3px rgba(0,110,255,.1);}
 
-    .btn-filtrar{
-        padding:10px 20px;border:none;border-radius:12px;
-        background:#006eff;color:#fff;font-size:14px;font-weight:600;
-        font-family:inherit;cursor:pointer;
-        display:inline-flex;align-items:center;gap:8px;
-        box-shadow:0 2px 6px rgba(0,110,255,.25);
-        transition:background .15s,transform .1s;
+    .input-fecha{
+        padding:10px 14px;
+        border:1.5px solid #e5e7eb;border-radius:12px;
+        background:#f8fafc;font-family:'Segoe UI',sans-serif;
+        font-size:14px;color:#081b3a;outline:none;
+        transition:border-color .2s,background .2s,box-shadow .2s;
     }
-    .btn-filtrar:hover{background:#0055cc;transform:translateY(-1px);}
+    .input-fecha:focus{border-color:#006eff;background:#fff;box-shadow:0 0 0 3px rgba(0,110,255,.1);}
+
+    /* Navegador de fechas */
+    .date-nav{
+        display:flex;align-items:center;gap:8px;
+        background:#f8fafc;border:1.5px solid #e5e7eb;
+        border-radius:14px;padding:6px 8px;width:fit-content;
+    }
+    .date-nav-btn{
+        width:34px;height:34px;border:1px solid #e5e7eb;border-radius:8px;
+        background:#fff;color:#475569;cursor:pointer;font-size:14px;
+        display:flex;align-items:center;justify-content:center;
+        transition:background .15s,color .15s;flex-shrink:0;
+    }
+    .date-nav-btn:hover{background:#006eff;color:#fff;border-color:#006eff;}
+    .date-display{display:flex;flex-direction:column;align-items:center;min-width:130px;}
+    .date-display-main{font-size:15px;font-weight:600;color:#081b3a;line-height:1.2;}
+    .date-display-sub{font-size:11px;color:#94a3b8;letter-spacing:.03em;}
+    .date-input-wrap{position:relative;}
+    .date-input-wrap input[type="date"]{
+        opacity:0;position:absolute;top:0;left:0;
+        width:100%;height:100%;cursor:pointer;border:none;background:transparent;
+    }
+    .date-calendar-btn{
+        width:34px;height:34px;border:1px solid #e5e7eb;border-radius:8px;
+        background:#fff;color:#475569;cursor:pointer;font-size:14px;
+        display:flex;align-items:center;justify-content:center;
+        transition:background .15s,color .15s;position:relative;flex-shrink:0;
+    }
+    .date-calendar-btn:hover{background:#006eff;color:#fff;border-color:#006eff;}
+    .today-btn{
+        padding:6px 12px;border:1px solid #006eff;border-radius:8px;
+        background:transparent;color:#006eff;font-size:12px;font-weight:600;
+        font-family:inherit;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;
+    }
+    .today-btn:hover{background:#006eff;color:#fff;}
 
     .btn-volver{
         padding:9px 18px;border:1.5px solid #006eff;border-radius:10px;
@@ -47,22 +80,40 @@
     }
     .badge-presente{background:#d1fae5;color:#065f46;}
     .badge-tardanza{background:#fef3c7;color:#92400e;}
-    .badge-ausente {background:#fee2e2;color:#991b1b;}
+    .badge-ausente{background:#fee2e2;color:#991b1b;}
+
+    .sel-estado-hist{
+        appearance:none;-webkit-appearance:none;
+        padding:6px 30px 6px 10px;
+        border:1.5px solid #e5e7eb;border-radius:8px;
+        background:#f8fafc;font-family:'Segoe UI',sans-serif;
+        font-size:13px;color:#081b3a;cursor:pointer;outline:none;
+        transition:border-color .2s;
+    }
+    .sel-estado-hist:focus{border-color:#006eff;background:#fff;}
+
+    .btn-guardar-hist{
+        padding:6px 14px;border:none;border-radius:8px;
+        background:#006eff;color:#fff;cursor:pointer;font-size:12px;font-weight:600;
+        font-family:inherit;display:inline-flex;align-items:center;gap:5px;
+        transition:background .15s;box-shadow:0 2px 6px rgba(0,110,255,.2);
+    }
+    .btn-guardar-hist:hover{background:#0055cc;}
+    .btn-guardar-hist.saving{opacity:.6;pointer-events:none;}
+    .btn-guardar-hist.saved{background:#10b981;}
+    .btn-guardar-hist.error{background:#ef4444;}
 
     .btn-delete-row{
         width:34px;height:34px;border:none;border-radius:8px;
         background:#fee2e2;color:#ef4444;cursor:pointer;font-size:14px;
         display:inline-flex;align-items:center;justify-content:center;
-        transition:background .15s,transform .1s,box-shadow .15s;
-        box-shadow:0 1px 3px rgba(239,68,68,.15);
+        transition:background .15s,transform .1s;
     }
-    .btn-delete-row:hover{
-        background:#ef4444;color:#fff;
-        box-shadow:0 4px 10px rgba(239,68,68,.35);
-        transform:translateY(-1px);
-    }
-    .btn-delete-row:disabled{background:#f3f4f6;color:#d1d5db;cursor:not-allowed;box-shadow:none;}
+    .btn-delete-row:hover{background:#ef4444;color:#fff;transform:translateY(-1px);}
+    .btn-delete-row:disabled{background:#f3f4f6;color:#d1d5db;cursor:not-allowed;transform:none;}
+
     .header-card{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .acciones-fila{display:flex;gap:6px;align-items:center;}
 </style>
 {% endblock %}
 
@@ -75,11 +126,12 @@
             <i class="fa-solid fa-arrow-left"></i> Volver
         </a>
     </div>
-    <form method="GET" class="filtro-form">
+
+    <form method="GET" class="filtro-form" id="filtroForm">
         <div class="select-group">
             <label>Grado</label>
             <div class="select-wrap">
-                <select name="curso">
+                <select name="curso" onchange="this.form.submit()">
                     <option value="">Seleccionar grado</option>
                     {% for curso in cursos %}
                         <option value="{{ curso.id }}"
@@ -92,19 +144,37 @@
             </div>
         </div>
 
+        <!-- Navegador de fechas -->
         <div class="select-group">
             <label>Fecha</label>
-            <input type="date" name="fecha" class="input-fecha"
-                   value="{{ fecha_sel|date:'Y-m-d' }}">
+            <div class="date-nav">
+                <button type="button" class="date-nav-btn" id="btnPrevDay" title="Día anterior">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="date-display">
+                    <span class="date-display-main">{{ fecha_sel|date:"d M Y"|default:"Sin fecha" }}</span>
+                    <span class="date-display-sub">{{ fecha_sel|date:"l"|default:"" }}</span>
+                </div>
+                <button type="button" class="date-nav-btn" id="btnNextDay" title="Día siguiente">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <div class="date-input-wrap date-calendar-btn" title="Elegir fecha">
+                    <i class="fa-solid fa-calendar"></i>
+                    <input type="date" id="datePicker"
+                           value="{{ fecha_sel|date:'Y-m-d' }}"
+                           max="{{ hoy|date:'Y-m-d' }}"
+                           onchange="goToDate(this.value)">
+                </div>
+                <button type="button" class="today-btn" onclick="goToDate('{{ hoy|date:'Y-m-d' }}')">
+                    Hoy
+                </button>
+                <input type="hidden" name="fecha" id="fechaHidden" value="{{ fecha_sel|date:'Y-m-d' }}">
+            </div>
         </div>
-
-        <button type="submit" class="btn-filtrar">
-            <i class="fa-solid fa-magnifying-glass"></i> Buscar
-        </button>
     </form>
 </div>
 
-{% if curso_sel %}
+{% if curso_sel and fecha_sel %}
 <div class="section-card">
     <div class="header-card">
         <div>
@@ -118,13 +188,14 @@
             <tr>
                 <th>#</th>
                 <th>Estudiante</th>
-                <th>Estado</th>
-                <th>Acción</th>
+                <th>Estado actual</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
             </tr>
         </thead>
         <tbody>
             {% for fila in filas %}
-            <tr data-estudiante="{{ fila.estudiante.id }}" data-fecha="{{ fecha_sel|date:'Y-m-d' }}">
+            <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>{{ fila.estudiante.nombre }}</td>
                 <td>
@@ -139,6 +210,20 @@
                     {% endif %}
                 </td>
                 <td>
+                    <div class="acciones-fila">
+                        <select class="sel-estado-hist">
+                            <option value="presente" {% if fila.asistencia and fila.asistencia.estado == 'presente' %}selected{% endif %}>✅ Presente</option>
+                            <option value="tardanza" {% if fila.asistencia and fila.asistencia.estado == 'tardanza' %}selected{% endif %}>⏰ Tardanza</option>
+                            <option value="ausente"  {% if fila.asistencia and fila.asistencia.estado == 'ausente'  %}selected{% endif %}>❌ Ausente</option>
+                        </select>
+                        <button class="btn-guardar-hist"
+                        data-estudiante="{{ fila.estudiante.id }}"
+                        data-fecha="{{ fecha_sel|date:'Y-m-d' }}">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar
+                        </button>
+                    </div>
+                </td>
+                <td>
                     <button class="btn-delete-row btn-eliminar-asis"
                             data-estudiante="{{ fila.estudiante.id }}"
                             data-fecha="{{ fecha_sel|date:'Y-m-d' }}"
@@ -149,7 +234,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="4" style="text-align:center;color:#6b7280;padding:30px;">
+                <td colspan="5" style="text-align:center;color:#6b7280;padding:30px;">
                     No hay estudiantes en este curso.
                 </td>
             </tr>
@@ -157,20 +242,100 @@
         </tbody>
     </table>
 </div>
+{% else %}
+<div class="section-card" style="text-align:center;color:#6b7280;padding:40px;">
+    <i class="fa-solid fa-calendar-xmark" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
+    Selecciona un grado y navega a una fecha para ver el historial.
+</div>
+{% endif %}
 
 <script>
-const CSRF = '{{ csrf_token }}';
+const CSRF         = '{{ csrf_token }}';
+const URL_GUARDAR  = '{% url "guardar_asistencia" %}';
 const URL_ELIMINAR = '{% url "eliminar_asistencia" %}';
+const HOY          = '{{ hoy|date:"Y-m-d" }}';
 
+function goToDate(dateStr) {
+    document.getElementById('fechaHidden').value = dateStr;
+    document.getElementById('filtroForm').submit();
+}
+
+document.getElementById('btnPrevDay').addEventListener('click', () => {
+    const val = document.getElementById('fechaHidden').value || HOY;
+    const d = new Date(val + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    goToDate(d.toISOString().split('T')[0]);
+});
+
+document.getElementById('btnNextDay').addEventListener('click', () => {
+    const val = document.getElementById('fechaHidden').value || HOY;
+    const d = new Date(val + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    goToDate(d.toISOString().split('T')[0]);
+});
+
+// Guardar / editar asistencia
+document.querySelectorAll('.btn-guardar-hist').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const fila   = btn.closest('tr');
+        const estado = fila.querySelector('.sel-estado-hist').value;
+
+        btn.classList.add('saving');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        const body = new URLSearchParams({
+            estudiante_id: btn.dataset.estudiante,
+            fecha:         btn.dataset.fecha,
+            estado:        estado,
+        });
+
+        try {
+            const res = await fetch(URL_GUARDAR, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': CSRF },
+                body: body,
+            });
+
+            if (res.ok) {
+                btn.classList.remove('saving');
+                btn.classList.add('saved');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Guardado';
+
+                // Actualizar badge de estado
+                const badgeCell = fila.querySelector('td:nth-child(3)');
+                const textos = { presente: '✅ Presente', tardanza: '⏰ Tardanza', ausente: '❌ Ausente' };
+                badgeCell.innerHTML = `<span class="badge-estado badge-${estado}">${textos[estado]}</span>`;
+
+                // Habilitar botón eliminar
+                const btnDel = fila.querySelector('.btn-eliminar-asis');
+                if (btnDel) btnDel.disabled = false;
+
+                setTimeout(() => {
+                    btn.classList.remove('saved');
+                    btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+                }, 2500);
+            } else { throw new Error(); }
+        } catch {
+            btn.classList.remove('saving');
+            btn.classList.add('error');
+            btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Error';
+            setTimeout(() => {
+                btn.classList.remove('error');
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+            }, 3000);
+        }
+    });
+});
+
+// Eliminar asistencia
 document.querySelectorAll('.btn-eliminar-asis').forEach(btn => {
-    btn.addEventListener('click', async function () {
+    btn.addEventListener('click', async function() {
         if (!confirm('¿Eliminar el registro de asistencia de este estudiante?')) return;
 
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
         const body = new URLSearchParams({
-            csrfmiddlewaretoken: CSRF,
             estudiante_id: btn.dataset.estudiante,
             fecha:         btn.dataset.fecha,
         });
@@ -189,7 +354,11 @@ document.querySelectorAll('.btn-eliminar-asis').forEach(btn => {
                 btn.disabled = true;
                 btn.title = 'Sin registro';
                 btn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-            } else { throw new Error(); }
+            } else {
+                const data = await res.json().catch(() => ({}));
+                console.error('Error:', data);
+                throw new Error();
+            }
         } catch {
             btn.disabled = false;
             btn.innerHTML = '<i class="fa-solid fa-trash"></i>';
@@ -198,12 +367,5 @@ document.querySelectorAll('.btn-eliminar-asis').forEach(btn => {
     });
 });
 </script>
-
-{% else %}
-<div class="section-card" style="text-align:center;color:#6b7280;padding:40px;">
-    <i class="fa-solid fa-calendar-xmark" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
-    Selecciona un grado y una fecha para ver el historial.
-</div>
-{% endif %}
 
 {% endblock %}

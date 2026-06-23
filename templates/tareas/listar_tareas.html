@@ -97,38 +97,56 @@
 
 {% block content %}
 
-<!-- Stats -->
+<div class="topbar">
+    <div class="welcome">
+        <h2>Tareas</h2>
+        <p>Gestiona las actividades académicas</p>
+    </div>
+    <div class="user-area">
+        <div class="notification">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notification-count">0</span>
+        </div>
+        <div class="profile">
+            <img src="https://i.pravatar.cc/120?img=3" alt="Docente">
+            <div>
+                <strong>{{ docente.nombre }}</strong>
+                <small>Docente</small>
+            </div>
+        </div>
+    </div>
+</div>
+<br>
+
 <div class="stats">
     <div class="stat-card">
         <div class="icon blue"><i class="fa-solid fa-book-open"></i></div>
-        <h3>{{ tareas|length }}</h3><p>Total Tareas</p>
+        <h3>{{ total_tareas|default:"0" }}</h3><p>Total Tareas</p>
     </div>
     <div class="stat-card">
         <div class="icon orange"><i class="fa-solid fa-clock"></i></div>
-        <h3>{{ tareas|length }}</h3><p>Activas</p>
+        <h3>{{ pendientes|default:"0" }}</h3><p>Pendientes</p>
     </div>
     <div class="stat-card">
         <div class="icon green"><i class="fa-solid fa-circle-check"></i></div>
-        <h3>0</h3><p>Completadas</p>
+        <h3>{{ entregadas|default:"0" }}</h3><p>Entregadas</p>
     </div>
     <div class="stat-card">
         <div class="icon purple"><i class="fa-solid fa-user-graduate"></i></div>
-        <h3>—</h3><p>Cursos Asignados</p>
+        <h3>{{ docente.cursos.count|default:"0" }}</h3><p>Cursos Asignados</p>
     </div>
 </div>
 
-<!-- Encabezado -->
 <div class="section-card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
     <div>
         <h4 style="margin:0;">Actividades Académicas</h4>
-        <small style="color:#6b7280;">{{ tareas|length }} tarea{{ tareas|length|pluralize }} registrada{{ tareas|length|pluralize }}</small>
+        <small style="color:#6b7280;">{{ total_tareas|default:"0" }} tarea{{ total_tareas|pluralize }} registrada{{ total_tareas|pluralize }}</small>
     </div>
     <a href="{% url 'crear_tarea' %}" class="nueva-tarea-btn">
         <i class="fa-solid fa-plus"></i> Nueva Tarea
     </a>
 </div>
 
-<!-- Lista de tareas -->
 {% for tarea in tareas %}
 <div class="tarea-card">
     <div class="tarea-info">

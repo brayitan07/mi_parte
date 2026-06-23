@@ -2,52 +2,99 @@
 {% block title %}Configuración{% endblock %}
 {% block active_configuracion %}active{% endblock %}
 
+{% block extra_css %}
+<style>
+  .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .config-group{display:flex;flex-direction:column;gap:6px;}
+  .config-group label{font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.04em;}
+  .config-input{padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-family:inherit;font-size:14px;color:#081b3a;outline:none;background:#f8fafc;transition:border-color .2s,box-shadow .2s;}
+  .config-input:focus{border-color:#006eff;background:#fff;box-shadow:0 0 0 3px rgba(0,110,255,.1);}
+  .config-input[readonly]{background:#f3f4f6;color:#6b7280;cursor:not-allowed;}
+  .pref-label{display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;}
+  .pref-label input[type=checkbox]{width:16px;height:16px;accent-color:#006eff;}
+  .grados{display:flex;flex-wrap:wrap;gap:8px;}
+  .grado{padding:8px 18px;background:#eef4ff;color:#006eff;border:none;border-radius:20px;font-size:13px;font-weight:600;cursor:default;}
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="topbar">
+  <div class="welcome">
+    <h2>Configuración</h2>
+    <p>Gestiona tu perfil y preferencias</p>
+  </div>
+  <div class="user-area">
+    <div class="notification">
+      <i class="fa-solid fa-bell"></i>
+      <span class="notification-count">0</span>
+    </div>
+    <div class="profile">
+      <img src="https://i.pravatar.cc/120?img=3" alt="Docente">
+      <div>
+        <strong>{{ docente.nombre }}</strong>
+        <small>Docente</small>
+      </div>
+    </div>
+  </div>
+</div>
+<br>
+
 <form method="POST">
-{% csrf_token %}
-<input type="hidden" name="guardar_perfil" value="1">
-<div class="section-card">
-    <h3>Configuración de Cuenta</h3><br>
+  {% csrf_token %}
+  <input type="hidden" name="guardar_perfil" value="1">
+  <div class="section-card">
+    <h4>Información de Cuenta</h4><br>
     <div class="config-grid">
-        <div>
-            <label>Nombre Completo</label>
-            <input type="text" name="nombre" class="config-input" value="{{ docente.nombre|default:'' }}">
-        </div>
-        <div>
-            <label>Correo Electrónico</label>
-            <input type="email" name="correo" class="config-input" value="{{ docente.correo|default:'' }}">
-        </div>
-        <div>
-            <label>Teléfono</label>
-            <input type="text" name="telefono" class="config-input" value="{{ docente.telefono|default:'' }}">
-        </div>
-        <div>
-            <label>Materias Asignadas</label>
-            <input type="text" class="config-input" value="{% for m in docente.materias.all %}{{ m.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}" readonly>
-        </div>
+      <div class="config-group">
+        <label>Nombre Completo</label>
+        <input type="text" name="nombre" class="config-input"
+               value="{{ docente.nombre|default:'' }}">
+      </div>
+      <div class="config-group">
+        <label>Correo Electrónico</label>
+        <input type="email" name="correo" class="config-input"
+               value="{{ docente.correo|default:'' }}">
+      </div>
+      <div class="config-group">
+        <label>Teléfono</label>
+        <input type="text" name="telefono" class="config-input"
+               value="{{ docente.telefono|default:'' }}">
+      </div>
+      <div class="config-group">
+        <label>Materias Asignadas</label>
+        <input type="text" class="config-input" readonly
+               value="{% for m in docente.materias.all %}{{ m.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+      </div>
     </div>
     <br>
-    <button type="submit" class="btn-save">Guardar Cambios</button>
-</div>
+    <button type="submit" class="btn-save">
+      <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
+    </button>
+  </div>
 </form>
 
 <div class="section-card">
-    <h3>Preferencias</h3><br>
-    <div class="preferences">
-        <label><input type="checkbox" checked> Recibir notificaciones por correo</label>
-        <br><br>
-        <label><input type="checkbox" checked> Mostrar recordatorios académicos</label>
-    </div>
+  <h4>Preferencias</h4><br>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <label class="pref-label">
+      <input type="checkbox" checked>
+      Recibir notificaciones por correo
+    </label>
+    <label class="pref-label">
+      <input type="checkbox" checked>
+      Mostrar recordatorios académicos
+    </label>
+  </div>
 </div>
 
 <div class="section-card">
-    <h3>Mis Cursos Asignados</h3><br>
-    <div class="grados">
-        {% for curso in docente.cursos.all %}
-            <button class="grado">{{ curso.nombre }}</button>
-        {% empty %}
-            <p style="color:#6b7280;">No hay cursos asignados.</p>
-        {% endfor %}
-    </div>
+  <h4>Cursos Asignados</h4><br>
+  <div class="grados">
+    {% for curso in docente.cursos.all %}
+      <span class="grado">{{ curso.nombre }}</span>
+    {% empty %}
+      <p style="color:#6b7280;">No hay cursos asignados.</p>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}

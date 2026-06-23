@@ -51,24 +51,6 @@
     <!-- MAIN -->
     <main class="content">
 
-        <!-- TOPBAR -->
-        <div class="topbar">
-            <div class="search-box">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" placeholder="{% block search_placeholder %}Buscar...{% endblock %}">
-            </div>
-            <div class="user-area">
-                <i class="fa-solid fa-bell notification"></i>
-                <div class="user">
-                    <img src="https://i.pravatar.cc/60?img=15" alt="Docente">
-                    <div>
-                        <strong>Carlos Pérez</strong>
-                        <small>Docente</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         {% block content %}{% endblock %}
 
     </main>
