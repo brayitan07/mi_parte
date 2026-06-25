@@ -1,0 +1,67 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block page_title %}{{ accion }} Estudiante{% endblock %}
+
+{% block content %}
+<div style="max-width:560px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        <a href="{% url 'admin_estudiantes' %}" style="color:#64748b;text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+        <h5 style="margin:0;color:#f1f5f9;">{{ accion }} Estudiante</h5>
+    </div>
+
+    {% if error %}
+    <div style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:12px 16px;border-radius:10px;margin-bottom:20px;font-size:14px;">
+        <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+    </div>
+    {% endif %}
+
+    <div class="admin-table" style="padding:28px;">
+        <form method="POST">
+            {% csrf_token %}
+            {% for campo, label, tipo, val in campo_list %}{% endfor %}
+
+            <div class="mb-4">
+                <label style="display:block;font-size:12px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Nombre *</label>
+                <input type="text" name="nombre" value="{{ estudiante.nombre|default:'' }}" required
+                       style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;">
+            </div>
+
+            <div class="mb-4">
+                <label style="display:block;font-size:12px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Correo *</label>
+                <input type="email" name="correo" value="{{ estudiante.correo|default:'' }}" required
+                       style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;">
+            </div>
+
+            <div class="mb-4">
+                <label style="display:block;font-size:12px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Curso *</label>
+                <select name="curso" required style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;appearance:none;cursor:pointer;">
+                    <option value="">Seleccionar curso</option>
+                    {% for c in cursos %}
+                        <option value="{{ c.id }}" {% if estudiante.curso and estudiante.curso.id == c.id %}selected{% endif %}>{{ c.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label style="display:block;font-size:12px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Usuario del sistema</label>
+                <select name="usuario" style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;appearance:none;cursor:pointer;">
+                    <option value="">Sin cuenta vinculada</option>
+                    {% for u in usuarios %}
+                        <option value="{{ u.id }}" {% if estudiante.usuario and estudiante.usuario.id == u.id %}selected{% endif %}>{{ u.username }} — {{ u.email|default:"sin email" }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display:flex;gap:10px;">
+                <button type="submit" style="flex:1;background:#38bdf8;color:#0f172a;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;">
+                    <i class="fas fa-save me-2"></i>{{ accion }} Estudiante
+                </button>
+                <a href="{% url 'admin_estudiantes' %}" style="flex:1;background:#1e293b;border:1px solid #334155;color:#94a3b8;border-radius:10px;padding:11px;font-size:14px;font-weight:600;text-align:center;text-decoration:none;">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

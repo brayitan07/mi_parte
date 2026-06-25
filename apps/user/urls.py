@@ -16,14 +16,33 @@ urlpatterns = [
     path('feria-ciencia/', views.feria_ciencia, name='feria_ciencia'),
     path('festival-artistico/', views.festival_artistico, name='festival_artistico'),
     path('semana-lectura/', views.semana_lectura, name='semana_lectura'),
-    # Panel Admin
-path('admin-panel/',         views.panel_admin,          name='panel_admin'),
-path('admin-panel/usuarios/', views.admin_usuarios,       name='admin_usuarios'),
-path('admin-panel/usuarios/<int:user_id>/toggle/', views.admin_toggle_usuario, name='admin_toggle_usuario'),
-path('admin-panel/tareas/',   views.admin_tareas,         name='admin_tareas'),
-path('admin-panel/estudiantes/', views.admin_estudiantes, name='admin_estudiantes'),
-path('admin-panel/docentes/', views.admin_docentes,       name='admin_docentes'),
+    # Reemplaza las rutas del panel admin en apps/user/urls.py
 
+path('admin-panel/',                                   views.panel_admin,              name='panel_admin'),
+
+# Usuarios
+path('admin-panel/usuarios/',                          views.admin_usuarios,            name='admin_usuarios'),
+path('admin-panel/usuarios/crear/',                    views.admin_crear_usuario,       name='admin_crear_usuario'),
+path('admin-panel/usuarios/<int:user_id>/editar/',     views.admin_editar_usuario,      name='admin_editar_usuario'),
+path('admin-panel/usuarios/<int:user_id>/eliminar/',   views.admin_eliminar_usuario,    name='admin_eliminar_usuario'),
+path('admin-panel/usuarios/<int:user_id>/toggle/',     views.admin_toggle_usuario,      name='admin_toggle_usuario'),
+path('admin-panel/usuarios/<int:user_id>/rol/',        views.admin_asignar_rol,         name='admin_asignar_rol'),
+
+# Estudiantes
+path('admin-panel/estudiantes/',                       views.admin_estudiantes,         name='admin_estudiantes'),
+path('admin-panel/estudiantes/crear/',                 views.admin_crear_estudiante,    name='admin_crear_estudiante'),
+path('admin-panel/estudiantes/<int:est_id>/editar/',   views.admin_editar_estudiante,   name='admin_editar_estudiante'),
+path('admin-panel/estudiantes/<int:est_id>/eliminar/', views.admin_eliminar_estudiante, name='admin_eliminar_estudiante'),
+
+# Docentes
+path('admin-panel/docentes/',                          views.admin_docentes,            name='admin_docentes'),
+path('admin-panel/docentes/crear/',                    views.admin_crear_docente,       name='admin_crear_docente'),
+path('admin-panel/docentes/<int:doc_id>/editar/',      views.admin_editar_docente,      name='admin_editar_docente'),
+path('admin-panel/docentes/<int:doc_id>/eliminar/',    views.admin_eliminar_docente,    name='admin_eliminar_docente'),
+
+# Tareas
+path('admin-panel/tareas/',                            views.admin_tareas,              name='admin_tareas'),
+path('admin-panel/tareas/<int:tarea_id>/eliminar/',    views.admin_eliminar_tarea_admin,name='admin_eliminar_tarea_admin'),
     # Recuperar contraseña
     path(
         'password-reset/',

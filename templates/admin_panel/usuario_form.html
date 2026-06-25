@@ -1,0 +1,103 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block page_title %}{{ accion }} Usuario{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{% url 'admin_usuarios' %}" class="btn-action" style="background:rgba(56,189,248,.15);color:#38bdf8;text-decoration:none;">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <h5 style="color:#f1f5f9;margin:0;">{{ accion }} Usuario</h5>
+</div>
+
+<div class="admin-table" style="padding:28px;max-width:600px;">
+    {% if error %}
+    <div style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#ef4444;padding:12px 16px;border-radius:10px;margin-bottom:20px;font-size:14px;">
+        <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- USERNAME (solo en crear) -->
+        {% if accion == 'Crear' %}
+        <div class="mb-4">
+            <label style="display:block;font-size:12px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">
+                Usuario *
+            </label>
+            <input type="text" name="username"
+                   value="{{ form.username|default:'' }}"
+                   style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;"
+                   required>
+        </div>
+        {% else %}
+        <div class="mb-4">
+            <label style="display:block;font-size:12px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">
+                Usuario
+            </label>
+            <input type="text" value="{{ usuario.username }}" readonly
+                   style="width:100%;background:#0f172a;border:1px solid #1e293b;color:#475569;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;cursor:not-allowed;">
+        </div>
+        {% endif %}
+
+        <!-- NOMBRE -->
+        <div class="mb-4">
+            <label style="display:block;font-size:12px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">
+                Nombre completo
+            </label>
+            <input type="text" name="nombre"
+                   value="{% if usuario %}{{ usuario.nombre }}{% elif form %}{{ form.nombre }}{% endif %}"
+                   style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;">
+        </div>
+
+        <!-- EMAIL -->
+        <div class="mb-4">
+            <label style="display:block;font-size:12px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">
+                Email
+            </label>
+            <input type="email" name="email"
+                   value="{% if usuario %}{{ usuario.email }}{% elif form %}{{ form.email }}{% endif %}"
+                   style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;">
+        </div>
+
+        <!-- ROL -->
+        <div class="mb-4">
+            <label style="display:block;font-size:12px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">
+                Rol
+            </label>
+            <select name="role"
+                    style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;">
+                <option value="">Sin rol</option>
+                {% for rol in roles %}
+                    <option value="{{ rol.id }}"
+                        {% if usuario and usuario.role and usuario.role.id == rol.id %}selected{% endif %}>
+                        {{ rol.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- CONTRASEÑA -->
+        <div class="mb-4">
+            <label style="display:block;font-size:12px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">
+                Contraseña {% if accion == 'Editar' %}<span style="color:#475569;font-weight:400;">(dejar vacío para no cambiar)</span>{% else %}*{% endif %}
+            </label>
+            <input type="password" name="password"
+                   {% if accion == 'Crear' %}required{% endif %}
+                   style="width:100%;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;">
+        </div>
+
+        <!-- BOTONES -->
+        <div style="display:flex;gap:12px;margin-top:32px;">
+            <button type="submit"
+                    style="background:#38bdf8;color:#0f172a;border:none;padding:12px 28px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;transition:.2s;">
+                <i class="fas fa-save me-2"></i>{{ accion }}
+            </button>
+            <a href="{% url 'admin_usuarios' %}"
+               style="background:rgba(100,116,139,.15);color:#64748b;border:1px solid #334155;padding:12px 28px;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
