@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educatec | Primaria</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f8fbff;
+        }
+        
+        .navbar {
+            background: #fff;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, .08);
+        }
+        
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #e8f1ff, #f8fbff);
+        }
+        
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #1e3c72;
+        }
+        
+        .hero img {
+            border-radius: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, .15);
+        }
+        
+        .section-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: #1e3c72;
+        }
+        
+        .card-primary {
+            border: none;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .08);
+            transition: .3s;
+        }
+        
+        .card-primary:hover {
+            transform: translateY(-10px);
+        }
+        
+        .card-primary img {
+            height: 180px;
+            object-fit: contain;
+            padding: 25px;
+        }
+        
+        .activity-img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .12);
+        }
+        
+        .footer {
+            background: #1e3c72;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container-fluid px-5">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-graduation-cap"></i>
+                <strong>Educatec</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#materias">Materias</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#proyectos">Proyectos</a>
+                    </li>
+
+                    <li class="nav-item ms-3">
+                        <button class="btn btn-apply" style="background-color:#006eff; color:#fff;"><a href="login.html" style="color:#fff; text-decoration:none;">Iniciar
+                            Sesión</a></button>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <a href="{% url 'index' %}" class="btn btn-outline-primary rounded-pill">
+            ← Volver al Inicio
+        </a>
+    </div>
+
+
+    <section class="hero">
+
+        <div class="container">
+
+            <div class="row align-items-center">
+
+                <div class="col-lg-6">
+
+                    <span class="badge bg-primary fs-6 mb-3">
+                    Educación Primaria
+                </span>
+
+                    <h1>
+                        ¡Descubre, Aprende y Crea!
+                    </h1>
+
+                    <p class="lead my-4">
+                        Un espacio donde los estudiantes desarrollan conocimientos, habilidades y creatividad.
+                    </p>
+
+                    <a href="#materias" class="btn btn-primary btn-lg rounded-pill px-5">
+                    Explorar
+                </a>
+
+                </div>
+
+                <div class="col-lg-6">
+
+                    <img src="https://th.bing.com/th/id/OIP.6-dIGKNPxRG8fXhEOAKMXAHaD4?w=342&h=180&c=7&r=0&o=7&pid=1.7&rm=3" class="img-fluid">
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <section id="materias" class="py-5">
+
+        <div class="container">
+
+            <h2 class="section-title text-center mb-5">
+                Materias Principales
+            </h2>
+
+            <div class="row g-4">
+
+                <div class="col-md-3">
+                    <div class="card card-primary text-center h-100">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3655/3655600.png">
+                        <div class="card-body">
+                            <h4>Matemáticas</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-primary text-center h-100">
+                        <img src="https://cdn-icons-png.flaticon.com/512/2784/2784445.png">
+                        <div class="card-body">
+                            <h4>Ciencias</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-primary text-center h-100">
+                        <img src="https://cdn-icons-png.flaticon.com/512/197/197374.png">
+                        <div class="card-body">
+                            <h4>Inglés</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-primary text-center h-100">
+                        <img src="data:image/webp;base64,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">
+                        <div class="card-body">
+                            <h4>Tecnología</h4>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section id="proyectos" class="py-5 bg-light">
+
+        <div class="container">
+
+            <h2 class="section-title text-center mb-5">
+                Aprendizaje en Acción
+            </h2>
+
+            <div class="row g-4">
+
+                <div class="col-lg-4">
+
+                    <img src="https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=900&q=80" class="activity-img">
+
+                    <div class="text-center mt-3">
+                        <h4>Proyectos Escolares</h4>
+                    </div>
+
+                </div>
+
+                <div class="col-lg-4">
+
+                    <img src="https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=900&q=80" class="activity-img">
+
+                    <div class="text-center mt-3">
+                        <h4>Experimentos</h4>
+                    </div>
+
+                </div>
+
+                <div class="col-lg-4">
+
+                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80" class="activity-img">
+
+                    <div class="text-center mt-3">
+                        <h4>Trabajo en Equipo</h4>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <section class="py-5">
+
+            <div class="container">
+
+                <div class="bg-primary text-white rounded-5 p-5 text-center shadow">
+
+                    <h2 class="fw-bold display-5 mb-4">
+                        ¡Cada día es una nueva oportunidad para aprender!
+                    </h2>
+
+                    <p class="lead mb-4">
+                        Explora, investiga, crea y descubre todo lo que puedes lograr.
+                    </p>
+
+                    <a href="#" class="btn btn-warning btn-lg rounded-pill px-5 py-3">
+                Comenzar la Aventura
+            </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <footer class="footer py-5">
+
+            <div class="container text-center">
+
+                <h3 class="mb-3">
+                    Educatec
+                </h3>
+
+                <p>
+                    Educación primaria enfocada en el aprendizaje, la creatividad y el desarrollo integral.
+                </p>
+
+                <p class="mb-0">
+                    © 2026 Educatec - Todos los derechos reservados
+                </p>
+
+            </div>
+
+        </footer>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

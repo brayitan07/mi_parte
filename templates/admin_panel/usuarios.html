@@ -1,0 +1,72 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block page_title %}Usuarios{% endblock %}
+
+{% block content %}
+<div class="admin-table">
+    <div class="admin-table-header">
+        <h6><i class="fas fa-users me-2" style="color:#38bdf8;"></i>Todos los Usuarios</h6>
+        <span style="color:#64748b; font-size:13px;">{{ usuarios.count }} registros</span>
+    </div>
+    <table class="table table-dark-custom">
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Email</th>
+                <th>Nombre</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Registro</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in usuarios %}
+            <tr>
+                <td>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="avatar-admin" style="width:32px;height:32px;font-size:12px;">
+                            {{ u.username|first|upper }}
+                        </div>
+                        {{ u.username }}
+                    </div>
+                </td>
+                <td style="color:#64748b;">{{ u.email|default:"—" }}</td>
+                <td>{{ u.nombre|default:"—" }}</td>
+                <td>
+                    {% if u.is_superuser %}
+                        <span class="badge-rol badge-admin">Admin</span>
+                    {% elif u.role %}
+                        <span class="badge-rol 
+                            {% if u.role.nombre|lower == 'docente' %}badge-docente
+                            {% elif u.role.nombre|lower == 'estudiante' %}badge-alumno
+                            {% else %}badge-usuario{% endif %}">
+                            {{ u.role.nombre }}
+                        </span>
+                    {% else %}
+                        <span class="badge-rol badge-usuario">Sin rol</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if u.is_active %}
+                        <span style="color:#22c55e; font-size:13px;"><i class="fas fa-circle" style="font-size:8px;"></i> Activo</span>
+                    {% else %}
+                        <span style="color:#ef4444; font-size:13px;"><i class="fas fa-circle" style="font-size:8px;"></i> Inactivo</span>
+                    {% endif %}
+                </td>
+                <td style="color:#64748b;">{{ u.date_joined|date:"d/m/Y" }}</td>
+                <td>
+                    {% if not u.is_superuser %}
+                    <a href="{% url 'admin_toggle_usuario' u.id %}" 
+                       class="btn-action {% if u.is_active %}btn-danger-soft{% else %}btn-success-soft{% endif %}">
+                        {% if u.is_active %}Desactivar{% else %}Activar{% endif %}
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center" style="color:#475569; padding:40px;">No hay usuarios</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

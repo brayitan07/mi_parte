@@ -150,10 +150,7 @@
                                 <li>✓ Inglés inicial</li>
                                 <li>✓ Expresión artística</li>
                             </ul>
-
-                            <a href="./prescolar.html" style="text-decoration: none;" class="btn-nivel">
-                                Conocer más
-                            </a>
+                            <a href="{% url 'prescolar' %}" class="btn-nivel">Conocer más</a>
 
                         </div>
 
@@ -189,7 +186,7 @@
                                 <li>✓ Proyectos STEAM</li>
                             </ul>
 
-                            <a href="./primaria.html" style="text-decoration: none;" class="btn-nivel">
+                            <a href="{% url 'primaria' %}" class="btn-nivel">
                                 Conocer más
                             </a>
 
@@ -227,7 +224,7 @@
                                 <li>✓ Preparación universitaria</li>
                             </ul>
 
-                            <a href="./segundaria.html" style="text-decoration: none;" class="btn-nivel">
+                            <a href="{% url 'segundaria' %}" class="btn-nivel">
                                 Conocer más
                             </a>
 
@@ -318,8 +315,7 @@
                                     <p class="small text-muted mb-3"><i class="fas fa-map-marker-alt me-1"></i>
                                         Laboratorios
                                     </p>
-                                    <a href="feria-ciencia.html" class="btn btn-primary btn-sm rounded-pill px-3">Ver
-                                        detalles</a>
+                                    <a href="{% url 'feria_ciencia' %}" class="btn btn-primary btn-sm rounded-pill px-3">Ver detalles</a>
                                 </div>
 
                             </div>
@@ -349,7 +345,7 @@
                                     <p class="small text-muted mb-3"><i class="fas fa-map-marker-alt me-1"></i> Teatro
                                         Principal
                                     </p>
-                                    <a href="festival-artistico.html" class="btn btn-primary">
+                                    <a href="{% url 'festival_artistico' %}" class="btn btn-primary">
                                         Más detalles
                                     </a>
                                 </div>
@@ -378,9 +374,10 @@
                                     </p>
                                     <p class="small text-muted mb-3"><i class="fas fa-map-marker-alt me-1"></i>
                                         Biblioteca Escolar</p>
-                                    <a href="semana-lectura.html" class="btn btn-primary">
+                                    <a href="{% url 'semana_lectura' %}" class="btn btn-primary">
                                         Más detalles
                                     </a>
+                                    
                                 </div>
 
                             </div>

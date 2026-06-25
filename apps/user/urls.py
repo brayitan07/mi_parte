@@ -10,6 +10,19 @@ urlpatterns = [
     path('', views.inicio, name='index'),
     path('redireccion/', views.redireccion_usuario, name='redireccion_usuario'),
     path('panel-usuario/', views.panel_usuario, name='panel_usuario'),
+    path('prescolar/', views.prescolar, name='prescolar'),
+    path('primaria/', views.primaria, name='primaria'),
+    path('segundaria/', views.segundaria, name='segundaria'),
+    path('feria-ciencia/', views.feria_ciencia, name='feria_ciencia'),
+    path('festival-artistico/', views.festival_artistico, name='festival_artistico'),
+    path('semana-lectura/', views.semana_lectura, name='semana_lectura'),
+    # Panel Admin
+path('admin-panel/',         views.panel_admin,          name='panel_admin'),
+path('admin-panel/usuarios/', views.admin_usuarios,       name='admin_usuarios'),
+path('admin-panel/usuarios/<int:user_id>/toggle/', views.admin_toggle_usuario, name='admin_toggle_usuario'),
+path('admin-panel/tareas/',   views.admin_tareas,         name='admin_tareas'),
+path('admin-panel/estudiantes/', views.admin_estudiantes, name='admin_estudiantes'),
+path('admin-panel/docentes/', views.admin_docentes,       name='admin_docentes'),
 
     # Recuperar contraseña
     path(

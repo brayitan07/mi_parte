@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Semana de la Lectura</title>
+
+    <!-- BOOTSTRAP -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- ICONOS -->
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            font-family:Arial, Helvetica, sans-serif;
+            background:#eef3f8;
+            overflow-x:hidden;
+            color:#111827;
+        }
+
+        /* FONDO */
+
+        .fondo{
+            position:fixed;
+            inset:0;
+            background:
+            linear-gradient(rgba(238,243,248,.90), rgba(238,243,248,.96)),
+            url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=1600&auto=format&fit=crop');
+            background-size:cover;
+            background-position:center;
+            z-index:-5;
+        }
+
+        .blur-1{
+            position:fixed;
+            width:500px;
+            height:500px;
+            background:#0d6efd;
+            filter:blur(140px);
+            opacity:.07;
+            top:-150px;
+            right:-100px;
+            border-radius:50%;
+            z-index:-4;
+        }
+
+        .blur-2{
+            position:fixed;
+            width:400px;
+            height:400px;
+            background:#ffffff;
+            filter:blur(120px);
+            opacity:.5;
+            bottom:-100px;
+            left:-100px;
+            border-radius:50%;
+            z-index:-4;
+        }
+
+        /* NAV */
+
+        .top-bar{
+            padding:25px 0;
+        }
+
+        .logo-evento{
+            font-size:20px;
+            font-weight:800;
+            color:#111827;
+        }
+
+        .btn-volver{
+            background:white;
+            border:1px solid #dbe4ee;
+            padding:12px 22px;
+            border-radius:50px;
+            text-decoration:none;
+            color:#111827;
+            font-weight:600;
+            transition:.35s ease;
+        }
+
+        .btn-volver:hover{
+            background:#0d6efd;
+            border-color:#0d6efd;
+            color:white;
+            transform:translateY(-3px);
+        }
+
+        /* CARD */
+
+        .lectura-section{
+            padding:20px 0 80px;
+        }
+
+        .lectura-card{
+            background:rgba(255,255,255,.70);
+            backdrop-filter:blur(18px);
+            border:1px solid rgba(255,255,255,.4);
+            border-radius:40px;
+            padding:55px;
+            box-shadow:0 20px 60px rgba(15,23,42,.08);
+            position:relative;
+            overflow:hidden;
+        }
+
+        .lectura-card::before{
+            content:"";
+            position:absolute;
+            width:260px;
+            height:260px;
+            background:#0d6efd;
+            border-radius:50%;
+            opacity:.05;
+            top:-80px;
+            right:-70px;
+        }
+
+        /* BADGE */
+
+        .lectura-badge{
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            background:#eef4ff;
+            color:#0d6efd;
+            border:1px solid #dbeafe;
+            padding:12px 22px;
+            border-radius:50px;
+            margin-bottom:30px;
+            font-size:14px;
+            font-weight:700;
+            position:relative;
+            z-index:2;
+        }
+
+        /* TITULO */
+
+        .lectura-title{
+            font-size:70px;
+            font-weight:900;
+            line-height:1;
+            margin-bottom:25px;
+            letter-spacing:-4px;
+            max-width:760px;
+            color:#111827;
+            position:relative;
+            z-index:2;
+        }
+
+        /* TEXTO */
+
+        .lectura-text{
+            color:#4b5563;
+            line-height:2;
+            font-size:17px;
+            max-width:850px;
+            position:relative;
+            z-index:2;
+        }
+
+        /* TAGS */
+
+        .lectura-tags{
+            display:flex;
+            flex-wrap:wrap;
+            gap:15px;
+            margin-top:40px;
+        }
+
+        .lectura-tag{
+            background:white;
+            border:1px solid #dbe4ee;
+            padding:13px 20px;
+            border-radius:50px;
+            font-size:14px;
+            font-weight:600;
+            transition:.35s ease;
+            cursor:pointer;
+        }
+
+        .lectura-tag:hover{
+            background:#0d6efd;
+            color:white;
+            border-color:#0d6efd;
+            transform:translateY(-4px);
+            box-shadow:0 12px 25px rgba(13,110,253,.18);
+        }
+
+        /* INFORMACION */
+
+        .info-extra{
+            margin-top:65px;
+        }
+
+        .extra-badge{
+            background:#eef4ff;
+            color:#0d6efd;
+            padding:10px 18px;
+            border-radius:50px;
+            font-size:14px;
+            font-weight:700;
+            display:inline-block;
+        }
+
+        .extra-texto h2{
+            font-size:42px;
+            font-weight:900;
+            line-height:1.1;
+            margin:18px 0 25px;
+            color:#111827;
+        }
+
+        .extra-texto p{
+            color:#6b7280;
+            line-height:2;
+            margin-bottom:18px;
+            font-size:16px;
+        }
+
+        .extra-panel{
+            background:white;
+            border:1px solid #e5e7eb;
+            border-radius:35px;
+            padding:35px;
+            box-shadow:0 15px 35px rgba(15,23,42,.05);
+        }
+
+        .panel-item{
+            display:flex;
+            align-items:center;
+            gap:15px;
+            padding:18px 0;
+            border-bottom:1px solid #eef2f7;
+            font-weight:600;
+            color:#374151;
+            transition:.3s ease;
+        }
+
+        .panel-item:last-child{
+            border:none;
+        }
+
+        .panel-item:hover{
+            transform:translateX(6px);
+            color:#0d6efd;
+        }
+
+        .panel-item i{
+            font-size:10px;
+            color:#0d6efd;
+        }
+
+        /* INFO */
+
+        .info-section{
+            margin-top:70px;
+        }
+
+        .info-box{
+            background:white;
+            border:1px solid #e5e7eb;
+            border-radius:30px;
+            padding:30px;
+            transition:.35s ease;
+            height:100%;
+        }
+
+        .info-box:hover{
+            transform:translateY(-8px);
+            box-shadow:0 20px 40px rgba(13,110,253,.12);
+            border-color:#0d6efd;
+        }
+
+        .info-icon{
+            width:70px;
+            height:70px;
+            background:#eef4ff;
+            border-radius:22px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin-bottom:20px;
+            transition:.35s ease;
+        }
+
+        .info-box:hover .info-icon{
+            background:#0d6efd;
+            transform:rotate(8deg);
+        }
+
+        .info-icon i{
+            font-size:28px;
+            color:#0d6efd;
+            transition:.35s ease;
+        }
+
+        .info-box:hover .info-icon i{
+            color:white;
+        }
+
+        .info-box h5{
+            font-weight:800;
+            margin-bottom:10px;
+        }
+
+        .info-box p{
+            color:#6b7280;
+            line-height:1.8;
+            margin:0;
+        }
+
+        /* ACTIVIDADES */
+
+        .bloque{
+            margin-top:70px;
+        }
+
+        .bloque h3{
+            font-size:34px;
+            font-weight:900;
+            margin-bottom:35px;
+        }
+
+        .actividad{
+            background:white;
+            border:1px solid #e5e7eb;
+            border-radius:30px;
+            padding:28px;
+            margin-bottom:22px;
+            transition:.35s ease;
+        }
+
+        .actividad:hover{
+            transform:translateX(10px);
+            border-color:#0d6efd;
+            box-shadow:0 15px 30px rgba(13,110,253,.10);
+        }
+
+        .actividad small{
+            color:#0d6efd;
+            font-weight:800;
+            letter-spacing:1px;
+            display:block;
+            margin-bottom:10px;
+        }
+
+        .actividad h5{
+            font-weight:800;
+            margin-bottom:10px;
+        }
+
+        .actividad p{
+            color:#6b7280;
+            line-height:1.8;
+            margin:0;
+        }
+
+        /* BOTON */
+
+        .btn-evento{
+            margin-top:45px;
+            display:inline-flex;
+            align-items:center;
+            gap:12px;
+            background:#0d6efd;
+            color:white;
+            padding:16px 30px;
+            border-radius:60px;
+            text-decoration:none;
+            font-weight:700;
+            transition:.35s ease;
+            box-shadow:0 15px 30px rgba(13,110,253,.18);
+        }
+
+        .btn-evento:hover{
+            transform:translateY(-5px);
+            background:#0b5ed7;
+            color:white;
+        }
+
+        /* RESPONSIVE */
+
+        @media(max-width:991px){
+
+            .lectura-card{
+                padding:35px;
+            }
+
+            .lectura-title{
+                font-size:48px;
+                letter-spacing:-2px;
+            }
+
+        }
+
+        @media(max-width:576px){
+
+            .lectura-title{
+                font-size:38px;
+            }
+
+            .lectura-card{
+                border-radius:28px;
+                padding:25px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- FONDO -->
+
+    <div class="fondo"></div>
+
+    <div class="blur-1"></div>
+
+    <div class="blur-2"></div>
+
+    <!-- NAV -->
+
+    <div class="top-bar">
+
+        <div class="container d-flex justify-content-between align-items-center">
+
+            <div class="logo-evento">
+
+                Semana de la Lectura
+
+            </div>
+
+            <a href="{% url 'index' %}" class="btn-volver">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- CONTENIDO -->
+
+    <section class="lectura-section">
+
+        <div class="container">
+
+            <div class="lectura-card">
+
+                <!-- BADGE -->
+
+                <div class="lectura-badge">
+
+                    <i class="fas fa-book-open"></i>
+
+                    Evento Educativo
+
+                </div>
+
+                <!-- TITULO -->
+
+                <h1 class="lectura-title">
+
+                    Semana de la Lectura
+
+                </h1>
+
+                <!-- TEXTO -->
+
+                <p class="lectura-text">
+
+                    La semana de la lectura es un espacio dedicado a promover
+                    el hábito lector y fortalecer la creatividad mediante actividades
+                    relacionadas con libros, cuentos, expresión oral y literatura.
+                    Durante el evento se realizarán dinámicas y presentaciones
+                    enfocadas en el aprendizaje y la imaginación.
+
+                </p>
+
+                <!-- TAGS -->
+
+                <div class="lectura-tags">
+
+                    <div class="lectura-tag">
+                        Lectura
+                    </div>
+
+                    <div class="lectura-tag">
+                        Literatura
+                    </div>
+
+                    <div class="lectura-tag">
+                        Cuentos
+                    </div>
+
+                    <div class="lectura-tag">
+                        Creatividad
+                    </div>
+
+                    <div class="lectura-tag">
+                        Educación
+                    </div>
+
+                </div>
+
+                <!-- INFORMACION EXTRA -->
+
+                <div class="info-extra">
+
+                    <div class="row align-items-center g-5">
+
+                        <div class="col-lg-7">
+
+                            <div class="extra-texto">
+
+                                <span class="extra-badge">
+
+                                    Experiencia educativa
+
+                                </span>
+
+                                <h2>
+                                    Un espacio para aprender e imaginar
+                                </h2>
+
+                                <p>
+
+                                    Durante la semana de la lectura se desarrollarán
+                                    diferentes actividades enfocadas en cuentos,
+                                    lectura grupal y dinámicas creativas que permitan
+                                    fortalecer la imaginación y el interés por la literatura.
+
+                                </p>
+
+                                <p>
+
+                                    El evento busca crear un ambiente dinámico y participativo
+                                    donde los estudiantes puedan compartir ideas,
+                                    descubrir nuevos libros y expresar su creatividad.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-5">
+
+                            <div class="extra-panel">
+
+                                <div class="panel-item">
+
+                                    <i class="fas fa-circle"></i>
+
+                                    Lecturas grupales
+
+                                </div>
+
+                                <div class="panel-item">
+
+                                    <i class="fas fa-circle"></i>
+
+                                    Narración de cuentos
+
+                                </div>
+
+                                <div class="panel-item">
+
+                                    <i class="fas fa-circle"></i>
+
+                                    Actividades creativas
+
+                                </div>
+
+                                <div class="panel-item">
+
+                                    <i class="fas fa-circle"></i>
+
+                                    Espacios de aprendizaje
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- INFO -->
+
+                <div class="info-section">
+
+                    <div class="row g-4">
+
+                        <div class="col-md-4">
+
+                            <div class="info-box">
+
+                                <div class="info-icon">
+
+                                    <i class="fas fa-calendar-alt"></i>
+
+                                </div>
+
+                                <h5>
+                                    Fecha
+                                </h5>
+
+                                <p>
+                                    12 Octubre 2026
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-4">
+
+                            <div class="info-box">
+
+                                <div class="info-icon">
+
+                                    <i class="fas fa-clock"></i>
+
+                                </div>
+
+                                <h5>
+                                    Horario
+                                </h5>
+
+                                <p>
+                                    8:00 AM - 1:00 PM
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-4">
+
+                            <div class="info-box">
+
+                                <div class="info-icon">
+
+                                    <i class="fas fa-location-dot"></i>
+
+                                </div>
+
+                                <h5>
+                                    Lugar
+                                </h5>
+
+                                <p>
+                                    Biblioteca institucional
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ACTIVIDADES -->
+
+                <div class="bloque">
+
+                    <h3>
+                        Actividades de la semana
+                    </h3>
+
+                    <div class="actividad">
+
+                        <small>
+                            8:00 AM
+                        </small>
+
+                        <h5>
+                            Apertura del evento
+                        </h5>
+
+                        <p>
+                            Bienvenida y presentación de las actividades programadas.
+                        </p>
+
+                    </div>
+
+                    <div class="actividad">
+
+                        <small>
+                            9:30 AM
+                        </small>
+
+                        <h5>
+                            Lectura grupal
+                        </h5>
+
+                        <p>
+                            Espacio de lectura compartida y participación estudiantil.
+                        </p>
+
+                    </div>
+
+                    <div class="actividad">
+
+                        <small>
+                            11:00 AM
+                        </small>
+
+                        <h5>
+                            Narración de cuentos
+                        </h5>
+
+                        <p>
+                            Actividad interactiva enfocada en imaginación y creatividad.
+                        </p>
+
+                    </div>
+
+                    <div class="actividad">
+
+                        <small>
+                            12:30 PM
+                        </small>
+
+                        <h5>
+                            Cierre de la jornada
+                        </h5>
+
+                        <p>
+                            Finalización de actividades y agradecimientos.
+                        </p>
+
+                    </div>
+
+                    <!-- BOTON -->
+
+                    <a href="#" class="btn-evento">
+
+                        <i class="fas fa-circle-info"></i>
+
+                        Más información
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</body>
+
+</html>
