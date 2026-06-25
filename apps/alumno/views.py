@@ -3,10 +3,12 @@ from apps.tareas.models import Tareas, RespuestaCorrecta, RespuestaEstudiante
 from apps.docente.models import Estudiante, Calificacion, Asistencia, Mensaje, Tarea, Docente
 from django.utils import timezone
 
-ESTUDIANTE_ID = 1
 
-def get_estudiante():
-    return Estudiante.objects.filter(id=ESTUDIANTE_ID).first()
+def get_estudiante(request):
+    try:
+        return request.user.estudiante
+    except Estudiante.DoesNotExist:
+        return None
 
 def get_stats(estudiante):
     calificaciones = Calificacion.objects.filter(estudiante=estudiante)
@@ -33,7 +35,7 @@ def get_stats(estudiante):
     }
 
 def dashboard_alumno(request):
-    estudiante = get_estudiante()
+    estudiante = get_estudiante(request)
     if not estudiante:
         return render(request, 'alumno/dashboard_alumno.html', {})
     stats = get_stats(estudiante)
@@ -50,7 +52,7 @@ def dashboard_alumno(request):
     return render(request, 'alumno/dashboard_alumno.html', context)
 
 def materias_alumno(request):
-    estudiante = get_estudiante()
+    estudiante = get_estudiante(request)
     if not estudiante:
         return render(request, 'alumno/materias_alumno.html', {})
     stats = get_stats(estudiante)
@@ -117,14 +119,14 @@ def detalle_tarea(request, tarea_id):
     })
 
 def calificaciones_alumno(request):
-    estudiante = get_estudiante()
+    estudiante = get_estudiante(request)
     if not estudiante:
         return render(request, 'alumno/calificaciones_alumno.html', {})
     stats = get_stats(estudiante)
     return render(request, 'alumno/calificaciones_alumno.html', {'estudiante': estudiante, **stats})
 
 def asistencia_alumno(request):
-    estudiante = get_estudiante()
+    estudiante = get_estudiante(request)
     if not estudiante:
         return render(request, 'alumno/asistencia_alumno.html', {})
     asistencias = Asistencia.objects.filter(estudiante=estudiante).order_by('-fecha')
@@ -136,7 +138,7 @@ def asistencia_alumno(request):
     })
 
 def mensajes_alumno(request):
-    estudiante = get_estudiante()
+    estudiante = get_estudiante(request)
     if not estudiante:
         return render(request, 'alumno/mensajes_alumno.html', {})
     mensajes = Mensaje.objects.filter(estudiante=estudiante).order_by('fecha')
@@ -161,7 +163,7 @@ def mensajes_alumno(request):
     })
 
 def logros_alumno(request):
-    estudiante = get_estudiante()
+    estudiante = get_estudiante(request)
     if not estudiante:
         return render(request, 'alumno/logros_alumno.html', {
             'promedio': 0,
@@ -173,5 +175,5 @@ def logros_alumno(request):
     return render(request, 'alumno/logros_alumno.html', {'estudiante': estudiante, **stats})
 
 def configuracion_alumno(request):
-    estudiante = get_estudiante()
+    estudiante = get_estudiante(request)
     return render(request, 'alumno/configuracion_alumno.html', {'estudiante': estudiante})

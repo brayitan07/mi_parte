@@ -142,10 +142,7 @@ def panel_usuario(request):
 @login_required
 def panel_estudiante(request):
 
-    return render(
-        request,
-        "user/inicio.html"
-    )
+    return render("dashboard_alumno.html")
 
 
 @login_required
