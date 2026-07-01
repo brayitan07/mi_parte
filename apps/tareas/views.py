@@ -262,7 +262,7 @@ def responder_tarea(request, tarea_id):
                 )
 
     return render(
-        request, "tareas/detalle_tarea.html", {"tarea": tarea, "resultados": resultados}
+        request, "tareas/alumno/detalle_tareas.html", {"tarea": tarea, "resultados": resultados}
     )
 
 
