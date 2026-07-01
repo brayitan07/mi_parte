@@ -48,27 +48,68 @@ pip install django-embed-video
 pip install pillow
 pip install reportlab
 pip install openpyxl
+pip install django-extensions
+pip install pydotplus
 ```
 
-## 5. Crear migraciones
+## 5. Instalar Graphviz (requerido por django-extensions)
+
+`django-extensions` usa el comando `graph_models` para generar diagramas del
+modelo de datos, y este necesita el programa **Graphviz** instalado en el
+sistema (no se instala con pip).
+
+1. Descarga la versión ZIP desde el sitio oficial:
+   👉 https://graphviz.org/download/
+2. Extrae el contenido en una carpeta de tu preferencia (evita nombres con
+   espacios o caracteres especiales, ejemplo: `C:\Graphviz`).
+3. Agrega Graphviz al PATH (solo para la sesión actual de la terminal):
+
+   **Windows (CMD):**
+   ```bash
+   set PATH=C:\Graphviz\bin;%PATH%
+   ```
+   Ajusta la ruta según la ubicación donde hayas descomprimido Graphviz.
+
+4. Verifica la instalación:
+   ```bash
+   dot -V
+   ```
+   Deberías ver algo como `dot - graphviz version 15.0.0 (...)`.
+
+> Nota: si cierras la terminal, la variable PATH configurada con `set` se
+> pierde y debes repetir el paso 3. Si quieres que sea permanente, agrégala
+> desde "Variables de entorno del sistema" en Windows.
+
+## 6. Agregar `django_extensions` a `INSTALLED_APPS`
+
+En `settings.py`, agrega la app (una sola vez, sin duplicarla):
+
+```python
+INSTALLED_APPS = [
+    ...
+    'django_extensions',
+]
+```
+
+## 7. Crear migraciones
 
 ```bash
 python manage.py makemigrations
 ```
 
-## 6. Aplicar migraciones
+## 8. Aplicar migraciones
 
 ```bash
 python manage.py migrate
 ```
 
-## 7. Crear superusuario
+## 9. Crear superusuario
 
 ```bash
 python manage.py createsuperuser
 ```
 
-## 8. Ejecutar servidor
+## 10. Ejecutar servidor
 
 ```bash
 python manage.py runserver
@@ -88,6 +129,9 @@ http://127.0.0.1:8000/
 - Pillow
 - ReportLab
 - OpenPyXL
+- django-extensions
+- pydotplus
+- Graphviz (programa externo, no se instala con pip)
 
 ## Generar requirements.txt
 
@@ -118,3 +162,14 @@ o
 ```bash
 pip install -r requirements.txt
 ```
+
+## Generar diagrama del modelo de datos
+
+Una vez instalado Graphviz y `django-extensions` (ver pasos 5 y 6):
+
+```bash
+python manage.py graph_models -a -o diagrama.png
+```
+
+Esto genera una imagen `diagrama.png` con el diagrama de todos los modelos
+de la aplicación.
