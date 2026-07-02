@@ -3,24 +3,29 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
-from django.db.models import Avg
 from django.utils import timezone
+from datetime import date
 
 from .models import (
     Docente, AsignacionDocente, Curso, Materia,
     Estudiante, Calificacion, Tarea, Asistencia, Mensaje,
+    PeriodoAcademico,
 )
 
+
 # ─────────────────────────────────────────
-# UTILIDAD: obtener el docente del usuario
+# UTILIDAD
 # ─────────────────────────────────────────
 
 def _get_docente(request):
-    """Devuelve el Docente ligado al usuario autenticado o None."""
     try:
         return request.user.docente
     except Docente.DoesNotExist:
         return None
+
+
+def _get_periodo_activo():
+    return PeriodoAcademico.objects.filter(activo=True).first()
 
 
 # ─────────────────────────────────────────
@@ -33,15 +38,33 @@ def dashboard_docente(request):
     if not docente:
         return redirect('iniciar_sesion')
 
-    asignaciones = AsignacionDocente.objects.filter(docente=docente).select_related('materia', 'curso')
-    tareas       = Tarea.objects.filter(asignacion__docente=docente)
-    mensajes_no_leidos = Mensaje.objects.filter(docente=docente, leido=False, enviado_por='estudiante').count()
+    asignaciones = AsignacionDocente.objects.filter(
+        docente=docente
+    ).select_related('materia', 'curso')
+
+    tareas = Tarea.objects.filter(asignacion__docente=docente)
+    mensajes_no_leidos = Mensaje.objects.filter(
+        docente=docente, leido=False, enviado_por='estudiante'
+    ).count()
+
+    # Cursos únicos del docente
+    cursos = Curso.objects.filter(
+        asignaciones__docente=docente
+    ).distinct()
+
+    # Tareas recientes
+    tareas_recientes = tareas.select_related(
+        'asignacion__materia', 'asignacion__curso'
+    ).order_by('-fecha_limite')[:5]
 
     context = {
         'docente':            docente,
         'asignaciones':       asignaciones,
+        'cursos':             cursos,
         'total_tareas':       tareas.count(),
         'mensajes_no_leidos': mensajes_no_leidos,
+        'tareas_recientes':   tareas_recientes,
+        'periodo_activo':     _get_periodo_activo(),
     }
     return render(request, 'docente/dashboard_docente.html', context)
 
@@ -76,7 +99,6 @@ def cursos_docente(request):
 
 @login_required
 def tarea_docente(request):
-    """Lista todas las tareas del docente."""
     docente = _get_docente(request)
     if not docente:
         return redirect('iniciar_sesion')
@@ -84,7 +106,7 @@ def tarea_docente(request):
     tareas = (
         Tarea.objects
         .filter(asignacion__docente=docente)
-        .select_related('asignacion__materia', 'asignacion__curso')
+        .select_related('asignacion__materia', 'asignacion__curso', 'periodo')
         .order_by('-fecha_limite')
     )
 
@@ -97,36 +119,33 @@ def tarea_docente(request):
 
 @login_required
 def crear_tarea(request):
-    """Muestra el formulario y crea una nueva tarea."""
     docente = _get_docente(request)
     if not docente:
         return redirect('iniciar_sesion')
 
-    asignaciones = (
-        AsignacionDocente.objects
-        .filter(docente=docente)
-        .select_related('materia', 'curso')
-    )
+    asignaciones = AsignacionDocente.objects.filter(
+        docente=docente
+    ).select_related('materia', 'curso')
+    periodos = PeriodoAcademico.objects.all().order_by('numero')
 
     if request.method == 'POST':
         asignacion_id = request.POST.get('asignacion')
         titulo        = request.POST.get('titulo', '').strip()
         descripcion   = request.POST.get('descripcion', '').strip()
         fecha_limite  = request.POST.get('fecha_limite')
+        periodo_id    = request.POST.get('periodo') or None
 
-        # Validación básica
         if not (asignacion_id and titulo and fecha_limite):
-            context = {
-                'docente':      docente,
-                'asignaciones': asignaciones,
-                'error':        'Por favor completa todos los campos obligatorios.',
-                'form':         request.POST,
-            }
-            return render(request, 'docente/crear_tarea.html', context)
+            return render(request, 'docente/crear_tarea.html', {
+                'docente': docente, 'asignaciones': asignaciones,
+                'periodos': periodos,
+                'error': 'Completa todos los campos obligatorios.',
+                'form': request.POST,
+            })
 
-        asignacion = get_object_or_404(AsignacionDocente, id=asignacion_id, docente=docente)
-
-        # Contamos los estudiantes del curso para total_estudiantes
+        asignacion = get_object_or_404(
+            AsignacionDocente, id=asignacion_id, docente=docente
+        )
         total_est = Estudiante.objects.filter(curso=asignacion.curso).count()
 
         Tarea.objects.create(
@@ -134,6 +153,7 @@ def crear_tarea(request):
             titulo            = titulo,
             descripcion       = descripcion,
             fecha_limite      = fecha_limite,
+            periodo_id        = periodo_id,
             total_estudiantes = total_est,
         )
         return redirect('tarea_docente')
@@ -141,6 +161,7 @@ def crear_tarea(request):
     context = {
         'docente':      docente,
         'asignaciones': asignaciones,
+        'periodos':     periodos,
     }
     return render(request, 'docente/crear_tarea.html', context)
 
@@ -152,10 +173,7 @@ def detalle_tarea(request, id):
         return redirect('iniciar_sesion')
 
     tarea = get_object_or_404(Tarea, id=id, asignacion__docente=docente)
-    context = {
-        'docente': docente,
-        'tarea':   tarea,
-    }
+    context = {'docente': docente, 'tarea': tarea}
     return render(request, 'docente/detalle_tarea.html', context)
 
 
@@ -166,11 +184,10 @@ def editar_tarea(request, id):
         return redirect('iniciar_sesion')
 
     tarea        = get_object_or_404(Tarea, id=id, asignacion__docente=docente)
-    asignaciones = (
-        AsignacionDocente.objects
-        .filter(docente=docente)
-        .select_related('materia', 'curso')
-    )
+    asignaciones = AsignacionDocente.objects.filter(
+        docente=docente
+    ).select_related('materia', 'curso')
+    periodos = PeriodoAcademico.objects.all().order_by('numero')
 
     if request.method == 'POST':
         asignacion_id = request.POST.get('asignacion')
@@ -178,30 +195,27 @@ def editar_tarea(request, id):
         descripcion   = request.POST.get('descripcion', '').strip()
         fecha_limite  = request.POST.get('fecha_limite')
         estado        = request.POST.get('estado', 'pendiente')
+        periodo_id    = request.POST.get('periodo') or None
 
         if not (asignacion_id and titulo and fecha_limite):
-            context = {
-                'docente':      docente,
-                'tarea':        tarea,
-                'asignaciones': asignaciones,
-                'error':        'Por favor completa todos los campos obligatorios.',
-            }
-            return render(request, 'docente/editar_tarea.html', context)
+            return render(request, 'docente/editar_tarea.html', {
+                'docente': docente, 'tarea': tarea,
+                'asignaciones': asignaciones, 'periodos': periodos,
+                'error': 'Completa todos los campos obligatorios.',
+            })
 
-        asignacion = get_object_or_404(AsignacionDocente, id=asignacion_id, docente=docente)
-
-        tarea.asignacion   = asignacion
+        tarea.asignacion   = get_object_or_404(AsignacionDocente, id=asignacion_id, docente=docente)
         tarea.titulo       = titulo
         tarea.descripcion  = descripcion
         tarea.fecha_limite = fecha_limite
         tarea.estado       = estado
+        tarea.periodo_id   = periodo_id
         tarea.save()
         return redirect('tarea_docente')
 
     context = {
-        'docente':      docente,
-        'tarea':        tarea,
-        'asignaciones': asignaciones,
+        'docente': docente, 'tarea': tarea,
+        'asignaciones': asignaciones, 'periodos': periodos,
     }
     return render(request, 'docente/editar_tarea.html', context)
 
@@ -218,7 +232,7 @@ def eliminar_tarea(request, id):
 
 
 # ─────────────────────────────────────────
-# CALIFICACIONES
+# CALIFICACIONES (POR PERIODO)
 # ─────────────────────────────────────────
 
 @login_required
@@ -227,57 +241,64 @@ def calificaciones_docente(request):
     if not docente:
         return redirect('iniciar_sesion')
 
-    # Cursos y materias que tiene este docente (para los <select>)
-    asignaciones = (
-        AsignacionDocente.objects
-        .filter(docente=docente)
-        .select_related('materia', 'curso')
-    )
     cursos   = Curso.objects.filter(asignaciones__docente=docente).distinct()
     materias = Materia.objects.filter(asignaciones__docente=docente).distinct()
+    periodos = PeriodoAcademico.objects.all().order_by('numero')
 
     curso_sel   = None
     materia_sel = None
+    periodo_sel = None
     estudiantes = []
-    calificaciones_map = {}  # {estudiante.id: Calificacion}
+    calificaciones_map = {}
 
-    # Estadísticas globales del docente
-    todas_cal = Calificacion.objects.filter(asignacion__docente=docente)
-    total_notas     = todas_cal.count()
-    promedios       = [c.promedio for c in todas_cal]
+    # Estadísticas globales
+    todas_cal        = Calificacion.objects.filter(asignacion__docente=docente)
+    total_notas      = todas_cal.count()
+    promedios        = [c.promedio for c in todas_cal]
     promedio_general = round(sum(promedios) / len(promedios), 2) if promedios else 0
     en_riesgo        = sum(1 for p in promedios if p < 3.0)
     destacados       = sum(1 for p in promedios if p >= 4.5)
 
     curso_id   = request.GET.get('curso')
     materia_id = request.GET.get('materia')
+    periodo_id = request.GET.get('periodo')
 
     if curso_id and materia_id:
         curso_sel   = get_object_or_404(Curso,   id=curso_id)
         materia_sel = get_object_or_404(Materia, id=materia_id)
 
-        # Verificamos que el docente tenga esa asignación
+        # Periodo seleccionado o activo por defecto
+        if periodo_id:
+            periodo_sel = get_object_or_404(PeriodoAcademico, id=periodo_id)
+        else:
+            periodo_sel = _get_periodo_activo()
+
         asignacion = AsignacionDocente.objects.filter(
             docente=docente, curso=curso_sel, materia=materia_sel
         ).first()
 
         if asignacion:
             estudiantes = Estudiante.objects.filter(curso=curso_sel)
-            cals = Calificacion.objects.filter(asignacion=asignacion)
+            cals = Calificacion.objects.filter(
+                asignacion=asignacion,
+                periodo=periodo_sel,
+            )
             calificaciones_map = {c.estudiante_id: c for c in cals}
 
     context = {
-        'docente':           docente,
-        'cursos':            cursos,
-        'materias':          materias,
-        'curso_sel':         curso_sel,
-        'materia_sel':       materia_sel,
-        'estudiantes':       estudiantes,
+        'docente':            docente,
+        'cursos':             cursos,
+        'materias':           materias,
+        'periodos':           periodos,
+        'curso_sel':          curso_sel,
+        'materia_sel':        materia_sel,
+        'periodo_sel':        periodo_sel,
+        'estudiantes':        estudiantes,
         'calificaciones_map': calificaciones_map,
-        'total_notas':       total_notas,
-        'promedio_general':  promedio_general,
-        'en_riesgo':         en_riesgo,
-        'destacados':        destacados,
+        'total_notas':        total_notas,
+        'promedio_general':   promedio_general,
+        'en_riesgo':          en_riesgo,
+        'destacados':         destacados,
     }
     return render(request, 'docente/calificaciones_docente.html', context)
 
@@ -285,11 +306,6 @@ def calificaciones_docente(request):
 @login_required
 @require_POST
 def guardar_nota(request):
-    """
-    Llamado via fetch desde calificaciones_docente.html.
-    Recibe: estudiante_id, curso_id, materia_id, tarea, parcial, examen
-    Crea o actualiza la Calificacion usando get_or_create sobre la AsignacionDocente.
-    """
     docente = _get_docente(request)
     if not docente:
         return JsonResponse({'error': 'No autorizado'}, status=403)
@@ -297,40 +313,37 @@ def guardar_nota(request):
     estudiante_id = request.POST.get('estudiante_id')
     curso_id      = request.POST.get('curso_id')
     materia_id    = request.POST.get('materia_id')
+    periodo_id    = request.POST.get('periodo_id')
 
     try:
         tarea_val   = float(request.POST.get('tarea',   0))
         parcial_val = float(request.POST.get('parcial', 0))
         examen_val  = float(request.POST.get('examen',  0))
     except ValueError:
-        return JsonResponse({'error': 'Valores numéricos inválidos'}, status=400)
+        return JsonResponse({'error': 'Valores inválidos'}, status=400)
 
-    # Validar rango colombiano 0–5
     for v in (tarea_val, parcial_val, examen_val):
         if not (0 <= v <= 5):
-            return JsonResponse({'error': 'Las notas deben estar entre 0 y 5'}, status=400)
+            return JsonResponse({'error': 'Notas entre 0 y 5'}, status=400)
 
     estudiante = get_object_or_404(Estudiante, id=estudiante_id)
     asignacion = get_object_or_404(
         AsignacionDocente,
-        docente  = docente,
-        curso_id = curso_id,
-        materia_id = materia_id,
+        docente=docente, curso_id=curso_id, materia_id=materia_id,
     )
+    periodo = get_object_or_404(PeriodoAcademico, id=periodo_id) if periodo_id else None
 
     cal, _ = Calificacion.objects.get_or_create(
-        estudiante = estudiante,
-        asignacion = asignacion,
+        estudiante=estudiante,
+        asignacion=asignacion,
+        periodo=periodo,
     )
     cal.tarea   = tarea_val
     cal.parcial = parcial_val
     cal.examen  = examen_val
     cal.save()
 
-    return JsonResponse({
-        'ok':      True,
-        'promedio': cal.promedio,
-    })
+    return JsonResponse({'ok': True, 'promedio': cal.promedio})
 
 
 @login_required
@@ -343,16 +356,16 @@ def eliminar_nota(request):
     estudiante_id = request.POST.get('estudiante_id')
     curso_id      = request.POST.get('curso_id')
     materia_id    = request.POST.get('materia_id')
+    periodo_id    = request.POST.get('periodo_id')
 
     asignacion = get_object_or_404(
         AsignacionDocente,
-        docente    = docente,
-        curso_id   = curso_id,
-        materia_id = materia_id,
+        docente=docente, curso_id=curso_id, materia_id=materia_id,
     )
     Calificacion.objects.filter(
-        estudiante_id = estudiante_id,
-        asignacion    = asignacion,
+        estudiante_id=estudiante_id,
+        asignacion=asignacion,
+        periodo_id=periodo_id or None,
     ).delete()
 
     return JsonResponse({'ok': True})
@@ -370,49 +383,48 @@ def reporte_notas(request):
 
     cursos   = Curso.objects.filter(asignaciones__docente=docente).distinct()
     materias = Materia.objects.filter(asignaciones__docente=docente).distinct()
+    periodos = PeriodoAcademico.objects.all().order_by('numero')
 
-    curso_sel   = None
-    materia_sel = None
-    calificaciones = []
+    curso_sel        = None
+    materia_sel      = None
+    periodo_sel      = None
+    calificaciones   = []
     promedio_general = 0
 
     curso_id   = request.GET.get('curso')
     materia_id = request.GET.get('materia')
+    periodo_id = request.GET.get('periodo')
 
     if curso_id and materia_id:
         curso_sel   = get_object_or_404(Curso,   id=curso_id)
         materia_sel = get_object_or_404(Materia, id=materia_id)
+        periodo_sel = get_object_or_404(PeriodoAcademico, id=periodo_id) if periodo_id else None
 
         asignacion = AsignacionDocente.objects.filter(
-            docente    = docente,
-            curso      = curso_sel,
-            materia    = materia_sel,
+            docente=docente, curso=curso_sel, materia=materia_sel
         ).first()
 
         if asignacion:
-            calificaciones = (
-                Calificacion.objects
-                .filter(asignacion=asignacion)
-                .select_related('estudiante')
-            )
+            qs = Calificacion.objects.filter(
+                asignacion=asignacion
+            ).select_related('estudiante', 'periodo')
+            if periodo_sel:
+                qs = qs.filter(periodo=periodo_sel)
+            calificaciones = qs
             promedios = [c.promedio for c in calificaciones]
             promedio_general = round(sum(promedios) / len(promedios), 2) if promedios else 0
 
     context = {
-        'docente':           docente,
-        'cursos':            cursos,
-        'materias':          materias,
-        'curso_sel':         curso_sel,
-        'materia_sel':       materia_sel,
-        'calificaciones':    calificaciones,
-        'promedio_general':  promedio_general,
+        'docente': docente, 'cursos': cursos, 'materias': materias,
+        'periodos': periodos, 'curso_sel': curso_sel,
+        'materia_sel': materia_sel, 'periodo_sel': periodo_sel,
+        'calificaciones': calificaciones, 'promedio_general': promedio_general,
     }
     return render(request, 'docente/reporte_notas.html', context)
 
 
 @login_required
 def exportar_reporte_pdf(request):
-    """Exporta el reporte de notas como PDF usando reportlab."""
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import letter
 
@@ -422,21 +434,17 @@ def exportar_reporte_pdf(request):
 
     curso_id   = request.GET.get('curso')
     materia_id = request.GET.get('materia')
+    periodo_id = request.GET.get('periodo')
 
     if not (curso_id and materia_id):
         return redirect('reporte_notas')
 
     asignacion = get_object_or_404(
-        AsignacionDocente,
-        docente    = docente,
-        curso_id   = curso_id,
-        materia_id = materia_id,
+        AsignacionDocente, docente=docente, curso_id=curso_id, materia_id=materia_id,
     )
-    calificaciones = (
-        Calificacion.objects
-        .filter(asignacion=asignacion)
-        .select_related('estudiante')
-    )
+    qs = Calificacion.objects.filter(asignacion=asignacion).select_related('estudiante', 'periodo')
+    if periodo_id:
+        qs = qs.filter(periodo_id=periodo_id)
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = (
@@ -446,32 +454,28 @@ def exportar_reporte_pdf(request):
     p = canvas.Canvas(response, pagesize=letter)
     width, height = letter
 
-    # Encabezado
     p.setFont('Helvetica-Bold', 16)
-    p.drawString(50, height - 60, f'Reporte de Notas — {asignacion.materia} — {asignacion.curso}')
+    p.drawString(50, height - 60, f'Reporte — {asignacion.materia} — {asignacion.curso}')
     p.setFont('Helvetica', 11)
     p.drawString(50, height - 80, f'Docente: {docente.nombre}')
 
-    # Tabla
     y = height - 120
     p.setFont('Helvetica-Bold', 11)
-    p.drawString(50,  y, 'Estudiante')
-    p.drawString(260, y, 'Tarea')
-    p.drawString(340, y, 'Parcial')
-    p.drawString(420, y, 'Examen')
-    p.drawString(500, y, 'Promedio')
+    for col, x in [('Estudiante', 50), ('Periodo', 240), ('Tarea', 310), ('Parcial', 380), ('Examen', 450), ('Promedio', 520)]:
+        p.drawString(x, y, col)
     y -= 20
 
     p.setFont('Helvetica', 10)
-    for cal in calificaciones:
+    for cal in qs:
         if y < 60:
             p.showPage()
             y = height - 60
-        p.drawString(50,  y, cal.estudiante.nombre[:35])
-        p.drawString(260, y, str(cal.tarea))
-        p.drawString(340, y, str(cal.parcial))
-        p.drawString(420, y, str(cal.examen))
-        p.drawString(500, y, str(cal.promedio))
+        p.drawString(50,  y, cal.estudiante.nombre[:28])
+        p.drawString(240, y, cal.periodo.nombre if cal.periodo else '—')
+        p.drawString(310, y, str(cal.tarea))
+        p.drawString(380, y, str(cal.parcial))
+        p.drawString(450, y, str(cal.examen))
+        p.drawString(520, y, str(cal.promedio))
         y -= 18
 
     p.showPage()
@@ -481,7 +485,6 @@ def exportar_reporte_pdf(request):
 
 @login_required
 def exportar_reporte_excel(request):
-    """Exporta el reporte de notas como Excel usando openpyxl."""
     import openpyxl
     from openpyxl.styles import Font, Alignment
 
@@ -491,46 +494,41 @@ def exportar_reporte_excel(request):
 
     curso_id   = request.GET.get('curso')
     materia_id = request.GET.get('materia')
+    periodo_id = request.GET.get('periodo')
 
     if not (curso_id and materia_id):
         return redirect('reporte_notas')
 
     asignacion = get_object_or_404(
-        AsignacionDocente,
-        docente    = docente,
-        curso_id   = curso_id,
-        materia_id = materia_id,
+        AsignacionDocente, docente=docente, curso_id=curso_id, materia_id=materia_id,
     )
-    calificaciones = (
-        Calificacion.objects
-        .filter(asignacion=asignacion)
-        .select_related('estudiante')
-    )
+    qs = Calificacion.objects.filter(asignacion=asignacion).select_related('estudiante', 'periodo')
+    if periodo_id:
+        qs = qs.filter(periodo_id=periodo_id)
 
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = 'Reporte'
 
-    # Encabezado
-    ws.merge_cells('A1:E1')
-    ws['A1'] = f'Reporte de Notas — {asignacion.materia} — {asignacion.curso}'
+    ws.merge_cells('A1:F1')
+    ws['A1'] = f'Reporte — {asignacion.materia} — {asignacion.curso}'
     ws['A1'].font = Font(bold=True, size=13)
     ws['A1'].alignment = Alignment(horizontal='center')
 
-    ws.append(['Estudiante', 'Tarea', 'Parcial', 'Examen', 'Promedio'])
+    ws.append(['Estudiante', 'Periodo', 'Tarea', 'Parcial', 'Examen', 'Promedio'])
     for cell in ws[2]:
         cell.font = Font(bold=True)
 
-    for cal in calificaciones:
+    for cal in qs:
         ws.append([
             cal.estudiante.nombre,
+            cal.periodo.nombre if cal.periodo else '—',
             float(cal.tarea),
             float(cal.parcial),
             float(cal.examen),
             float(cal.promedio),
         ])
 
-    # Ajuste de columnas
     for col in ws.columns:
         max_len = max(len(str(cell.value or '')) for cell in col)
         ws.column_dimensions[col[0].column_letter].width = max_len + 4
@@ -546,7 +544,7 @@ def exportar_reporte_excel(request):
 
 
 # ─────────────────────────────────────────
-# ASISTENCIA
+# ASISTENCIA (POR ASIGNACIÓN Y FECHA)
 # ─────────────────────────────────────────
 
 @login_required
@@ -555,11 +553,12 @@ def asistencia_docente(request):
     if not docente:
         return redirect('iniciar_sesion')
 
-    from datetime import date
-    cursos    = Curso.objects.filter(asignaciones__docente=docente).distinct()
-    fecha_hoy = timezone.now().date()
+    cursos      = Curso.objects.filter(asignaciones__docente=docente).distinct()
+    asignaciones_docente = AsignacionDocente.objects.filter(
+        docente=docente
+    ).select_related('materia', 'curso')
 
-    # Fecha seleccionada
+    fecha_hoy = timezone.now().date()
     fecha_str = request.GET.get('fecha')
     if fecha_str:
         try:
@@ -571,19 +570,32 @@ def asistencia_docente(request):
     else:
         fecha_sel = fecha_hoy
 
-    curso_sel       = None
-    estudiantes     = []
+    curso_sel      = None
+    asignacion_sel = None
+    estudiantes    = []
     asistencias_map = {}
 
-    curso_id = request.GET.get('curso')
+    curso_id      = request.GET.get('curso')
+    asignacion_id = request.GET.get('asignacion')
+
     if curso_id:
-        curso_sel   = get_object_or_404(Curso, id=curso_id)
-        estudiantes = Estudiante.objects.filter(curso=curso_sel)
-        asis = Asistencia.objects.filter(
-            estudiante__in=estudiantes,
-            fecha=fecha_sel,
-        )
-        asistencias_map = {a.estudiante_id: a.estado for a in asis}
+        curso_sel = get_object_or_404(Curso, id=curso_id)
+        # Asignaciones del docente en ese curso
+        asignaciones_curso = asignaciones_docente.filter(curso=curso_sel)
+
+        if asignacion_id:
+            asignacion_sel = get_object_or_404(
+                AsignacionDocente, id=asignacion_id, docente=docente, curso=curso_sel
+            )
+            estudiantes = Estudiante.objects.filter(curso=curso_sel)
+            asis = Asistencia.objects.filter(
+                estudiante__in=estudiantes,
+                asignacion=asignacion_sel,
+                fecha=fecha_sel,
+            )
+            asistencias_map = {a.estudiante_id: a.estado for a in asis}
+    else:
+        asignaciones_curso = asignaciones_docente.none()
 
     total     = len(estudiantes)
     presentes = sum(1 for v in asistencias_map.values() if v == 'presente')
@@ -591,70 +603,53 @@ def asistencia_docente(request):
     ausentes  = sum(1 for v in asistencias_map.values() if v == 'ausente')
 
     context = {
-        'docente':        docente,
-        'cursos':         cursos,
-        'curso_sel':      curso_sel,
-        'estudiantes':    estudiantes,
-        'asistencias_map': asistencias_map,
-        'fecha_hoy':      fecha_hoy,
-        'fecha_sel':      fecha_sel,
-        'total':          total,
-        'presentes':      presentes,
-        'tardanzas':      tardanzas,
-        'ausentes':       ausentes,
+        'docente':            docente,
+        'cursos':             cursos,
+        'asignaciones_curso': asignaciones_curso if curso_id else [],
+        'curso_sel':          curso_sel,
+        'asignacion_sel':     asignacion_sel,
+        'estudiantes':        estudiantes,
+        'asistencias_map':    asistencias_map,
+        'fecha_hoy':          fecha_hoy,
+        'fecha_sel':          fecha_sel,
+        'total':              total,
+        'presentes':          presentes,
+        'tardanzas':          tardanzas,
+        'ausentes':           ausentes,
     }
     return render(request, 'docente/asistencia_docente.html', context)
+
 
 @login_required
 @require_POST
 def guardar_asistencia(request):
     docente = _get_docente(request)
-
     if not docente:
-        return JsonResponse(
-            {'error': 'No autorizado'},
-            status=403
-        )
+        return JsonResponse({'error': 'No autorizado'}, status=403)
 
-    try:
-        estudiante_id = request.POST.get('estudiante_id')
-        fecha = request.POST.get('fecha')
-        estado = request.POST.get('estado', 'presente')
+    estudiante_id = request.POST.get('estudiante_id')
+    fecha         = request.POST.get('fecha')
+    estado        = request.POST.get('estado', 'presente')
+    asignacion_id = request.POST.get('asignacion_id')
 
-        if not estudiante_id:
-            return JsonResponse(
-                {'error': 'Falta estudiante_id'},
-                status=400
-            )
+    if not (estudiante_id and fecha and asignacion_id):
+        return JsonResponse({'error': 'Faltan datos'}, status=400)
 
-        if not fecha:
-            return JsonResponse(
-                {'error': 'Falta fecha'},
-                status=400
-            )
+    if estado not in {'presente', 'ausente', 'tardanza'}:
+        return JsonResponse({'error': 'Estado no válido'}, status=400)
 
-        estudiante = get_object_or_404(
-            Estudiante,
-            id=estudiante_id
-        )
+    estudiante = get_object_or_404(Estudiante, id=estudiante_id)
+    asignacion = get_object_or_404(
+        AsignacionDocente, id=asignacion_id, docente=docente
+    )
 
-        Asistencia.objects.update_or_create(
-            estudiante=estudiante,
-            fecha=fecha,
-            defaults={
-                'estado': estado
-            }
-        )
-
-        return JsonResponse({
-            'ok': True
-        })
-
-    except Exception as e:
-        return JsonResponse(
-            {'error': str(e)},
-            status=400
-        )
+    Asistencia.objects.update_or_create(
+        estudiante=estudiante,
+        asignacion=asignacion,
+        fecha=fecha,
+        defaults={'estado': estado},
+    )
+    return JsonResponse({'ok': True})
 
 
 @login_required
@@ -663,14 +658,13 @@ def historial_asistencia(request):
     if not docente:
         return redirect('iniciar_sesion')
 
-    from datetime import date
-    cursos  = Curso.objects.filter(asignaciones__docente=docente).distinct()
-    hoy     = timezone.now().date()
+    cursos   = Curso.objects.filter(asignaciones__docente=docente).distinct()
+    hoy      = timezone.now().date()
 
-    curso_id  = request.GET.get('curso')
-    fecha_str = request.GET.get('fecha')
+    curso_id      = request.GET.get('curso')
+    asignacion_id = request.GET.get('asignacion')
+    fecha_str     = request.GET.get('fecha')
 
-    # Fecha por defecto: hoy
     if fecha_str:
         try:
             fecha_sel = date.fromisoformat(fecha_str)
@@ -679,31 +673,45 @@ def historial_asistencia(request):
     else:
         fecha_sel = hoy
 
-    curso_sel = None
-    filas     = []
+    curso_sel          = None
+    asignacion_sel     = None
+    asignaciones_curso = []
+    filas              = []
 
     if curso_id:
-        curso_sel   = get_object_or_404(Curso, id=curso_id)
-        estudiantes = Estudiante.objects.filter(curso=curso_sel)
-        asistencias = Asistencia.objects.filter(
-            estudiante__in=estudiantes,
-            fecha=fecha_sel,
-        )
-        asistencia_map = {a.estudiante_id: a for a in asistencias}
-        filas = [
-            {'estudiante': est, 'asistencia': asistencia_map.get(est.id)}
-            for est in estudiantes
-        ]
+        curso_sel = get_object_or_404(Curso, id=curso_id)
+        asignaciones_curso = AsignacionDocente.objects.filter(
+            docente=docente, curso=curso_sel
+        ).select_related('materia')
+
+        if asignacion_id:
+            asignacion_sel = get_object_or_404(
+                AsignacionDocente, id=asignacion_id, docente=docente, curso=curso_sel
+            )
+            estudiantes = Estudiante.objects.filter(curso=curso_sel)
+            asis = Asistencia.objects.filter(
+                estudiante__in=estudiantes,
+                asignacion=asignacion_sel,
+                fecha=fecha_sel,
+            )
+            asistencia_map = {a.estudiante_id: a for a in asis}
+            filas = [
+                {'estudiante': est, 'asistencia': asistencia_map.get(est.id)}
+                for est in estudiantes
+            ]
 
     context = {
-        'docente':   docente,
-        'cursos':    cursos,
-        'curso_sel': curso_sel,
-        'fecha_sel': fecha_sel,
-        'filas':     filas,
-        'hoy':       hoy,
+        'docente':            docente,
+        'cursos':             cursos,
+        'asignaciones_curso': asignaciones_curso,
+        'curso_sel':          curso_sel,
+        'asignacion_sel':     asignacion_sel,
+        'fecha_sel':          fecha_sel,
+        'filas':              filas,
+        'hoy':                hoy,
     }
     return render(request, 'docente/historial_asistencia.html', context)
+
 
 @login_required
 @require_POST
@@ -714,24 +722,23 @@ def eliminar_asistencia(request):
 
     estudiante_id = request.POST.get('estudiante_id')
     fecha         = request.POST.get('fecha')
+    asignacion_id = request.POST.get('asignacion_id')
 
     if not (estudiante_id and fecha):
         return JsonResponse({'error': 'Faltan datos'}, status=400)
 
     estudiante = get_object_or_404(Estudiante, id=estudiante_id)
 
-    # Verificar que el estudiante pertenezca a un curso del docente
     es_del_docente = AsignacionDocente.objects.filter(
         docente=docente, curso=estudiante.curso
     ).exists()
-
     if not es_del_docente:
         return JsonResponse({'error': 'No autorizado'}, status=403)
 
-    Asistencia.objects.filter(
-        estudiante=estudiante,
-        fecha=fecha,
-    ).delete()
+    qs = Asistencia.objects.filter(estudiante=estudiante, fecha=fecha)
+    if asignacion_id:
+        qs = qs.filter(asignacion_id=asignacion_id)
+    qs.delete()
 
     return JsonResponse({'ok': True})
 
@@ -746,11 +753,9 @@ def mensajes_docente(request):
     if not docente:
         return redirect('iniciar_sesion')
 
-    # Estudiantes de los cursos del docente
     cursos_docente = Curso.objects.filter(asignaciones__docente=docente).distinct()
     estudiantes    = Estudiante.objects.filter(curso__in=cursos_docente)
 
-    # Conversación seleccionada
     est_sel      = None
     conversacion = []
 
@@ -760,8 +765,6 @@ def mensajes_docente(request):
         conversacion = Mensaje.objects.filter(
             docente=docente, estudiante=est_sel
         ).order_by('fecha')
-
-        # Marcar como leídos los mensajes del estudiante
         Mensaje.objects.filter(
             docente=docente, estudiante=est_sel,
             enviado_por='estudiante', leido=False,
@@ -773,10 +776,8 @@ def mensajes_docente(request):
         if contenido and estudiante_id:
             est = get_object_or_404(Estudiante, id=estudiante_id)
             Mensaje.objects.create(
-                docente    = docente,
-                estudiante = est,
-                contenido  = contenido,
-                enviado_por = 'docente',
+                docente=docente, estudiante=est,
+                contenido=contenido, enviado_por='docente',
             )
         return redirect(f"{request.path}?estudiante={estudiante_id}")
 

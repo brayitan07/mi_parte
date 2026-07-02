@@ -1,3 +1,4 @@
+# apps/docente/models.py
 from django.db import models
 from django.conf import settings
 
@@ -78,13 +79,41 @@ class Estudiante(models.Model):
         verbose_name_plural = 'Estudiantes'
 
 
+class PeriodoAcademico(models.Model):
+    nombre = models.CharField(max_length=50)   # Ej: "2026-1", "Primer Período"
+    numero = models.IntegerField(default=1)    # Para ordenar: 1, 2, 3, 4
+    activo = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        # Solo puede haber un período activo a la vez
+        if self.activo:
+            PeriodoAcademico.objects.exclude(pk=self.pk).update(activo=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.nombre
+
+    class Meta:
+        verbose_name = 'Período Académico'
+        verbose_name_plural = 'Períodos Académicos'
+        ordering = ['numero']
+
+
 class Calificacion(models.Model):
-    estudiante = models.ForeignKey(Estudiante,        on_delete=models.CASCADE, related_name='calificaciones')
-    asignacion = models.ForeignKey(AsignacionDocente, on_delete=models.CASCADE, related_name='calificaciones')
-    tarea      = models.DecimalField(max_digits=4, decimal_places=2, default=0)
-    parcial    = models.DecimalField(max_digits=4, decimal_places=2, default=0)
-    examen     = models.DecimalField(max_digits=4, decimal_places=2, default=0)
-    fecha      = models.DateField(auto_now_add=True)
+    estudiante = models.ForeignKey(
+        Estudiante, on_delete=models.CASCADE, related_name='calificaciones'
+    )
+    asignacion = models.ForeignKey(
+        AsignacionDocente, on_delete=models.CASCADE, related_name='calificaciones'
+    )
+    periodo = models.ForeignKey(
+        PeriodoAcademico, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='calificaciones'
+    )
+    tarea   = models.DecimalField(max_digits=4, decimal_places=2, default=0)
+    parcial = models.DecimalField(max_digits=4, decimal_places=2, default=0)
+    examen  = models.DecimalField(max_digits=4, decimal_places=2, default=0)
+    fecha   = models.DateField(auto_now_add=True)
 
     @property
     def promedio(self):
@@ -104,7 +133,7 @@ class Calificacion(models.Model):
     class Meta:
         verbose_name = 'Calificación'
         verbose_name_plural = 'Calificaciones'
-        unique_together = ('estudiante', 'asignacion')
+        unique_together = ('estudiante', 'asignacion', 'periodo')
 
 
 class Tarea(models.Model):
@@ -115,7 +144,13 @@ class Tarea(models.Model):
     ]
     titulo            = models.CharField(max_length=200)
     descripcion       = models.TextField(blank=True)
-    asignacion        = models.ForeignKey(AsignacionDocente, on_delete=models.CASCADE, related_name='tareas')
+    asignacion        = models.ForeignKey(
+        AsignacionDocente, on_delete=models.CASCADE, related_name='tareas'
+    )
+    periodo = models.ForeignKey(
+        PeriodoAcademico, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='tareas'
+    )
     fecha_limite      = models.DateField()
     estado            = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
     entregas          = models.IntegerField(default=0)
@@ -147,9 +182,15 @@ class Asistencia(models.Model):
         ('ausente',  'Ausente'),
         ('tardanza', 'Tardanza'),
     ]
-    estudiante = models.ForeignKey(Estudiante, on_delete=models.CASCADE, related_name='asistencias')
-    fecha      = models.DateField()
-    estado     = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='presente')
+    estudiante = models.ForeignKey(
+        Estudiante, on_delete=models.CASCADE, related_name='asistencias'
+    )
+    asignacion = models.ForeignKey(
+        AsignacionDocente, on_delete=models.CASCADE,
+        null=True, blank=True, related_name='asistencias'
+    )
+    fecha  = models.DateField()
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='presente')
 
     def __str__(self):
         return f"{self.estudiante} — {self.fecha}: {self.estado}"
@@ -157,16 +198,23 @@ class Asistencia(models.Model):
     class Meta:
         verbose_name = 'Asistencia'
         verbose_name_plural = 'Asistencias'
-        unique_together = ('estudiante', 'fecha')
+        unique_together = ('estudiante', 'asignacion', 'fecha')
 
 
 class Mensaje(models.Model):
-    docente     = models.ForeignKey(Docente,    on_delete=models.CASCADE, related_name='mensajes_enviados')
-    estudiante  = models.ForeignKey(Estudiante, on_delete=models.CASCADE, related_name='mensajes')
+    docente     = models.ForeignKey(
+        Docente, on_delete=models.CASCADE, related_name='mensajes_enviados'
+    )
+    estudiante  = models.ForeignKey(
+        Estudiante, on_delete=models.CASCADE, related_name='mensajes'
+    )
     contenido   = models.TextField()
-    enviado_por = models.CharField(max_length=10, choices=[('docente', 'Docente'), ('estudiante', 'Estudiante')])
-    fecha       = models.DateTimeField(auto_now_add=True)
-    leido       = models.BooleanField(default=False)
+    enviado_por = models.CharField(
+        max_length=10,
+        choices=[('docente', 'Docente'), ('estudiante', 'Estudiante')]
+    )
+    fecha = models.DateTimeField(auto_now_add=True)
+    leido = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.enviado_por}: {self.contenido[:40]}"
